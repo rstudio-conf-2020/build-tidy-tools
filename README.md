@@ -39,7 +39,7 @@ ADD LEARNING OBJECTIVE(S)
 
 ## Is this course for me?
 
-THREE_QUESTIONS
+Have you written a few of your own R functions? Are you ready to start sharing your code (or data) through R packages? Are you curious what you can do to make your first R packages easy for your users to use, and for you to maintain?
 
 ## Prework
 
