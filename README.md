@@ -1,4 +1,4 @@
-WORKSHOP_TITLE
+Building Tidy Tools
 ================
 
 ### rstudio::conf 2020
