@@ -27,6 +27,10 @@ by Charlotte Wickham and Hadley Wickham
 
 -----
 
+## Questions?
+
+Feel free to ask questions in the [Building Tidy Tools Workshop RStudio Community thread](https://community.rstudio.com/t/building-tidy-tools-workshop-rstudio-conf-2020/49091).
+
 ## Overview
 
 This is a two-day hands on workshop for those who have embraced the tidyverse and now want to expand it to meet their own needs. We'll discuss API design, functional programming tools, the basics of object design in S3, and the tidy eval system for NSE.
@@ -36,6 +40,10 @@ This is a two-day hands on workshop for those who have embraced the tidyverse an
 * Learn how to write collections of functions that work well together, and adhere to existing conventions so they're easy to pick up for newcomers. 
 
 You should take this workshop if you have experience programming in R and want to learn how to tackle larger scale problems. You'll get the most from it if you're already familiar with functions and are comfortable with R’s basic data structures (vectors, matrices, arrays, lists, and data frames). Note: There is ~30% overlap in the material with Hadley Wickham’s previous "R Masterclass". However, the material has been substantially reorganised, so if you've taken the R Masterclass in the past, you'll still learn a lot in this class.
+
+## Is this course for me?
+
+Have you written a few of your own R functions? Are you ready to start sharing your code (or data) through R packages? Are you curious what you can do to make your first R packages easy for your users to use, and for you to maintain?
 
 ## Learning objectives
 
@@ -72,3 +80,27 @@ usethis::create_from_github("hadley/fordogs", fork = FALSE, protocol = "https")
 * When you're done, put a green post-it on your computer. 
 * If you need help, put up a pink post-it.
 -->
+
+
+## Schedule
+
+| Time          | Activity         |
+| :------------ | :--------------- |
+| 09:00 - 10:30 | Session 1        |
+| 10:30 - 11:00 | *Coffee break*   |
+| 11:00 - 12:30 | Session 2        |
+| 12:30 - 13:30 | *Lunch break*    |
+| 13:30 - 15:00 | Session 3        |
+| 15:00 - 15:30 | *Coffee break*   |
+| 15:30 - 17:00 | Session 4        |
+
+## Instructors
+
+This course is led by friend of RStudio, [Charlotte Wickham](https://cwick.co.nz), a professor and award winning teacher and data analyst at Oregon State University, and co-taught by her brother [Hadley Wickham](http://hadley.nz), Chief Scientist at RStudio.
+
+-----
+
+![](https://i.creativecommons.org/l/by/4.0/88x31.png) This work is
+licensed under a [Creative Commons Attribution 4.0 International
+License](https://creativecommons.org/licenses/by/4.0/).
+
