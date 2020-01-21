@@ -12,7 +12,7 @@ by Charlotte Wickham and Hadley Wickham
 :spiral\_calendar: January 27 and 28, 2020  
 :alarm\_clock: 09:00 - 17:00  
 :hotel: Plaza A (Lobby Level)  
-:writing\_hand: [rstd.io/conf](http://rstd.io/conf)
+:writing\_hand: [rstd.io/build-tt](http://rstd.io/build-tt)
 
 -----
 
@@ -117,6 +117,8 @@ data analyst at Oregon State University, and co-taught by her brother
 [Hadley Wickham](http://hadley.nz), Chief Scientist at RStudio.
 
 -----
+
+These materials closely follow <https://github.com/hadley/tidy-tools>
 
 ![](https://i.creativecommons.org/l/by/4.0/88x31.png) This work is
 licensed under a [Creative Commons Attribution 4.0 International

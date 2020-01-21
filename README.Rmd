@@ -23,7 +23,7 @@ by Charlotte Wickham and Hadley Wickham
 :spiral_calendar: January 27 and 28, 2020  
 :alarm_clock:     09:00 - 17:00  
 :hotel:           Plaza A (Lobby Level)  
-:writing_hand:    [rstd.io/conf](http://rstd.io/conf)
+:writing_hand:    [rstd.io/build-tt](http://rstd.io/build-tt)
 
 -----
 
@@ -99,6 +99,8 @@ usethis::create_from_github("hadley/fordogs", fork = FALSE, protocol = "https")
 This course is led by friend of RStudio, [Charlotte Wickham](https://cwick.co.nz), a professor and award winning teacher and data analyst at Oregon State University, and co-taught by her brother [Hadley Wickham](http://hadley.nz), Chief Scientist at RStudio.
 
 -----
+
+These materials closely follow https://github.com/hadley/tidy-tools
 
 ![](https://i.creativecommons.org/l/by/4.0/88x31.png) This work is
 licensed under a [Creative Commons Attribution 4.0 International
