@@ -27,6 +27,10 @@ by Charlotte Wickham and Hadley Wickham
 
 -----
 
+## Slides
+
+* [Introduction and "Whole Game"](1-intro.pdf)
+
 ## Questions?
 
 Feel free to ask questions in the [Building Tidy Tools Workshop RStudio Community thread](https://community.rstudio.com/t/building-tidy-tools-workshop-rstudio-conf-2020/49091).
