@@ -30,7 +30,8 @@ by Charlotte Wickham and Hadley Wickham
 ## Slides
 
 * [Introduction and "The Whole Game"](1-intro.pdf)
-* [Testing](2-testing.pdf)
+* [Unit Tests](2-testing.pdf)
+* [Documentation and Sharing](3-sharing.pdf)
 
 ## Questions?
 
