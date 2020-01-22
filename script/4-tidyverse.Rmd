@@ -1,0 +1,215 @@
+# Tidyverse in packages
+
+* How to refer to functions (recap)
+* Tidy evaluation
+* Should you use the pipe?
+
+Inspired by <https://ggplot2.tidyverse.org/dev/articles/ggplot2-in-packages.html>, thanks to [Dewey Dunnington](http://github.com/paleolimbot). I'm going to focus on ggplot2, with a dash of dplyr, but the same principles apply to basically any function in the tidyverse.
+
+**Your turn**: Turn this code in to package. Use what you learned yesterday to get as much as possible of R CMD check to work. Copy and paste from github!
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Create a local copy of first 10 rows of mtcars data frame
+# We'll come back how you should store this later
+mtcars <- data.frame(
+  mpg = c(21, 21, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2),
+  cyl = c(6, 6, 4, 6, 8, 6, 8, 4, 4, 6),
+  disp = c(160, 160, 108, 258, 360, 225, 360, 146.7, 140.8, 167.6),
+  hp = c(110, 110, 93, 110, 175, 105, 245, 62, 95, 123),
+  drat = c(3.9, 3.9, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, 3.92, 3.92),
+  wt = c(2.62, 2.875, 2.32, 3.215, 3.44, 3.46, 3.57, 3.19, 3.15, 3.44),
+  qsec = c(16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20, 22.9, 18.3),
+  vs = c(0, 0, 1, 1, 0, 1, 0, 1, 1, 1),
+  am = c(1, 1, 1, 0, 0, 0, 0, 0, 0, 0),
+  gear = c(4, 4, 4, 3, 3, 3, 3, 4, 4, 4),
+  carb = c(4, 4, 1, 1, 2, 1, 4, 2, 2, 4)
+)
+
+# cyl_plot()
+ggplot(mtcars) + 
+  geom_bar(aes(cyl)) + 
+  coord_flip()
+
+# cyl_sum()
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(n = n(), mpg = mean(mpg))
+```
+
+* `create_package("~/desktop/tidytest")`
+* `use_mit_license()` / `use_gpl3_license()`
+* make two functions: `cyl_plot()` and `cyl_summary()`
+* make it work - remember dependency stuff (`use_something()`, and `::`)
+* get check passing as cleanly as you can
+* GREEN post it when done; PINK post it for problems
+
+---
+
+* Remove calls to `library()`, and instead call `use_package()` once
+* Use `::` or `@importFrom` to access the functions
+* `@importFrom magrittr %>%` to access the pipe
+* For data-variables we switch from `cyl` to `.data$cyl`
+  and added `@importFrom rlang .data`
+* Using rlang and magrittr increase the explicit dependencies, but don't change the implicit dependencies.
+---
+
+## Intro to tidy evalation?
+
+### What is it?
+
+**Your turn**
+
+The following function calls use variables `bins`, `diamonds`, `carat`, `price`, `color`, and `clarity`. In this code, they're all used in the same way. But there's really two types here. What are they? What's the difference?
+
+```{r}
+bins <- 50
+diamonds %>% 
+  ggplot(aes(carat, price)) + 
+  geom_hex(bins = bins)
+diamonds %>% 
+  group_by(color, clarity) %>% 
+  summarise(price = mean(price))
+```
+
+---
+
+At its heart tidyeval blurs the line between variables in an environment (env-variable) and variables (data-variables) in a data frame. These are deceptively similar because we use the same word for them. One reason that tidy eval is hard is that you have to start to separate these two concepts in your brain (and the point of the tidyverse is so that you don't have to).
+
+```{r}
+a <- 1
+df <- data.frame(b = 1)
+
+mutate(df, c = a + b)
+ggplot(df, aes(a, b)) + geom_point()
+```
+
+This blurring makes for elegant data analysis code but causes two problems:
+
+* `R CMD check` can't find df-vars in the environment, so complains
+* It's hard to use indirection; i.e. storing a df-var in an env-var
+
+Tidy evaluation is implemented by the rlang package, primarily through `enquo()` and `eval_tidy()`. We're not going to talk about the underlying theory today. I think it's beautiful and elegant and wonderful. Instead we're going to focus on the practicalties.
+
+**Your turn**: Add this function and get R CMD check passing:
+
+```{r}
+#' @export
+#' @importFrom rlang .data
+diamonds_summary2 <- function(bins) {
+  diamonds %>% 
+    ggplot2::ggplot(aes(carat, price)) + 
+    ggplot2::geom_hex(bins = bin)
+}
+```
+
+## What if you want to use it yourself?
+
+First approach is to avoid it. Pass in the object that `aes()` creates:
+
+```{r}
+piechart <- function(data, mapping) {
+  ggplot(data, mapping) +
+    geom_bar(width = 1) + 
+    coord_polar(theta = "y") + 
+    xlab(NULL) + 
+    ylab(NULL)
+}
+```
+
+`...` doesn't need any special treatment. This is often the easiest place to start: 
+
+```{r}
+count <- function(df, ...) {
+  df %>%
+    group_by(...) %>% 
+    summarise(n = n()) %>% 
+    ungroup()
+}
+```
+
+Trying to send `...` to two different places is often a sign you're trying to be too complicated. Create functions like existing ggplot2 and dplyr functions; small components that you join together.
+
+Don't forget about existing `_if` and `_at` functions in dplyr. They'll take care of a lot of details for you.
+
+### Taking variables as inputs
+
+```{r, error = TRUE}
+col_summary <- function(df, col) {
+  ggplot(df) + 
+    geom_bar(aes(x = col)) + 
+    coord_flip()
+}
+col_summary(mtcars, cyl)
+```
+
+Need to tell `geom_bar()` that env-variable `col` contains a df-variable: do that with embracing.
+
+```{r}
+col_summary <- function(df, col) {
+  ggplot(df) + 
+    geom_bar(aes(x = {{ col }})) + 
+    coord_flip()
+}
+col_summary(mtcars, cyl)
+```
+
+Inspired by the very awesome glue package:
+
+```{r}
+name <- "Hadley"
+glue::glue("Hello {name}!")
+```
+
+* `{` = interpolate string
+* `{{` = interpolate code
+
+### Select functions
+
+Some functions have "select" semantics - you don't give them operations that work with values, but operations that work with column names:
+
+* `select()`
+* `group_by_at()`
+* most tidyr functions
+
+Slighty different options:
+
+* Variables by you: `select(df, one_of("age", "height"))`
+* Variables as string: `select(df, one_of(vars))`
+* Variables unquoted: `select(df, {{ vars }})`
+
+## The pipe
+
+What if you want to use the pipe in your package? Is it ok?
+
+**Your turn**: 
+* What's the cost of dependending on magrittr?
+* What's the cost of using the pipe?
+
+---
+
+* no dependencies or system dependenices
+* takes max 10s to install
+* package is ~180 kb
+
+* `%>%` makes debugging a little harder
+* not everyone can understand it
+* some performance cost
+
+---
+
+If it works I think you should use it. Most of the packages I work on don't use it, because it doesn't help. But some do! (e.g pkgdown)
+
+## Package data
+
+Show dplyr starwars dataset.
+
+If you want your package to provide data:
+
+* `usethis::use_data_raw()` creates `data-raw/dataset.R`
+* Should call `usethis::use_data()` to create `data/dataset.rda`
+* Automatically made available on load
+* Still need to document: document name of dataset as a string in `R/data.R`
+  <https://roxygen2.r-lib.org/articles/rd.html#datasets>

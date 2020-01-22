@@ -1,0 +1,421 @@
+# Function types
+
+## Introduction/motivation
+
+In order to understand R code when you're reading it, you need to somehow execute the code in your head. This requires having a mental model of how R works (sometimes called a notational machine). This model must be much simpler than the real thing!
+
+An important component of that mental model is "function types". This is a shorthand meaning that you understand what are valid inputs (i.e. what types of things are permitted, and how are their sizes related), and how they affect the output. Understanding function types is a bit like unit analysis in physics; that lets you check that you're at least in the right ballpark.
+
+---
+
+Let's make this concrete with an example:
+
+```{r, eval = FALSE}
+y <- sum(x)
+```
+
+If this code runs,
+
+* What can you tell me about `x`?
+* What can you tell me about `y`?
+
+Take a minute to discuss it with your neighbour.
+
+---
+
+`x` is a numeric or logical vector (ignoring complex)
+`y` is a numeric vector of length 1.
+
+Analyse `sapply()` ?
+
+Draw some diagrams showing functions that narrow types vs. functions that expand them? Come up with expand where combination of fairly simple functions leads to explosion of types?
+
+## Vector types
+
+Today I'm going to focus on function that work with vectors, because this covers most functions  that you might encounter in a data analysis. 
+
+*Your turn* What are the eight most common types of vectors?
+
+---
+
+logical, numeric, character, factor (ordered factor), date, time, duration, list.
+(unimportant: raw, complex, integer/double distinction)
+
+special: data.frame, NA
+
+---
+
+The "type" of a function is the type of its inputs, and the type of its output. Can you describe the type of these functions:
+
+* `mean()`
+* `diff()`
+* `sqrt()`
+* `dplyr::first()`
+* `paste()` (with `collapse`)
+
+Challenge: think about sizes too.
+
+(Remeber red post-it means you need help; green means that you're done)
+
+---
+
+<!-- COMMIT TO GIT -->
+
+For most function the output type can be descrbied in a straightforward way from the types of its inputs. I think this is generally a really important principle: if you can't easily do this, then your simple mental model of R isn't going to work well with the function.
+
+```{r}
+complicated_type <- function(x, y) {
+  if (x < 0) {
+    "negative"
+  } else {
+    if (is.na(y)) {
+      NA
+    } else {
+      1
+    }
+  }
+}
+```
+
+More concretely:
+
+```{r}
+col_means <- function(df) {
+  num <- sapply(df, is.numeric)
+  sapply(df[, num], mean)
+}
+col_means(mtcars)
+col_means(iris)
+
+col_means(data.frame(x = 1:10))
+col_means("x")
+col_means(mean)
+```
+
+
+You might've heard me talk about this idea of "type-stability": you should be able to easily predict the output type from the input types; it's stable because changes to the _values_ doesn't change the output type.
+
+## Sizes
+
+What about functions that take multiple vectors? There's another important principle at play:
+
+* `+`
+* `pmin()`
+* `paste()` (without `collapse`)
+* `data.frame()`
+
+---
+
+This behaviour is called **recycling** because the shorter vector is recycled to the same length as the longer (behaviour is inconsistent if it isn't repeated a whole number of times)
+
+
+```{r}
+1:3 + integer()
+1:3 + 1
+1:3 + 1:2
+1:3 + 1:3
+```
+
+```{r}
+paste(1:2, 1:3)
+
+# note different warnings
+1:2 + 1:3
+cbind(1:2, 1:3)
+pmin(1:2, 1:3)
+
+data.frame(1:2, 1:3)
+```
+
+Generally, in the tidyverse we're moving towards a more restricted version of recycling where we only recycle vectors of length 1 and throw an error for everything else.
+
+```{r}
+library(dplyr)
+df <- data.frame(X = 1:3)
+df %>% mutate(y = 1)
+df %>% mutate(y = 1:2)
+```
+
+## More precision with vctr
+
+But lets circle back to types, because that's where most of the challenge lies.
+
+```{r}
+library(vctrs)
+```
+
+We really need a more precise definition of "type". In vctrs, we use the idea of a prototype (or ptype for short), a length-0 subset of a vector. This is a clever trick that gives us metadata but no data.
+
+```{r}
+vec_ptype(letters)
+vec_ptype(Sys.Date())
+```
+
+And a helpful `_show` function that gives more consistent output
+
+```{r}
+vec_ptype_show(letters)
+vec_ptype_show(Sys.Date())
+```
+
+**Your turn**: What's makes different with factors, date-times (`Sys.time()`), and durations ((`Sys.time() - Sys.time()` )) different to the other vector types?
+
+**Your turn**: What's the prototype of a data.frame?
+
+---
+
+## S3 vectors
+
+I think it's now worthwhile to talk about more about the details of factors, dates, and date-times. These are S3 vetors that are built on top of atomic vectors using attributes. You can find out the underlying atomic vector with `typeof()` and see the attributes with `attributes()`.
+
+**Your turn**: What is the underlying vector type and attributes of:
+* factor (`factor("a")`)
+* date (`Sys.Date()`)
+* date-time (`Sys.time()`)
+
+---
+
+You can get the data with `vec_data()`.
+
+It's hard to construct these directly from their underlying data types in base R. So vctrs has:
+
+* `new_factor()`
+* `new_date()`
+* `new_datetime()`
+
+**Your turn**: 
+* What does the integer in factors represent?
+* What does the double in dates represent?
+* What does the double in date-times represent?
+
+---
+
+An S3 object is just an object with a class attribute. And you can change the class!!!
+
+```{r}
+x <- factor(1:10)
+class(x)
+class(x) <- "Date"
+```
+
+S3 is the type of system that lets you point the gun at your foot. Just don't pull the trigger.
+
+Note that prototypes are an idea implemented in vctrs; and hence the names are meaningful. S3 classes are implemented in base R and hence the names are historical.
+
+## Behaviour
+
+These objects behaviour differently because many functions in R are **generics**. Generics are functions with a (mostly) constant interface, but different implementations, called **methods**, depending on the class of the object.
+
+This makes R different to most object oriented systems (apart from Julia). Usually methods belong to a class. But in S3 methods belong to a generic function.
+
+You can often tell if a function is a generic because it will call `UseMethod()`. But some do dispatch in C, so you'll need `sloop::ftype()`. The most important generic function is print. The name of a method is just `{generic}.{class}`, and this is usually what you need to find help.
+
+The details can get a bit more complicated so you can use `sloop::s3_dispatch()` to find it:
+
+```{r}
+library(sloop)
+s3_dispatch(print(ordered(1:3)))
+```
+
+Then `s3_get_method()` to find the implementation.
+
+**Your turn**: Find the implementation of print for factors, numerics, and dates.
+
+```{r}
+s3_get_method(print.Date)
+s3_get_method(print.POSIXct)
+s3_get_method(print.factor)
+```
+
+S3 also powers non-vector objects:
+
+```{r}
+mod <- lm(mpg ~ wt, data = mtcars)
+summary(mod)
+
+s3_class(mod)
+s3_dispatch(print(mod))
+s3_dispatch(summary(mod))
+```
+
+What's a vector vs not a vector? It's hard to define it precisely, but if it's something you'd imagine putting in a data frame then it's a vector.
+
+## Creating new generics
+
+```{r}
+bizarro("abc")
+#> [1] "cba"
+
+bizarro(1)
+#> [1] -1
+
+bizarro(c(TRUE, FALSE))
+#> [1] FALSE TRUE
+```
+
+Key invariants:
+* `vec_ptype(bizzaro(x))` equals `vec_ptype(x)`
+* `bizzaro(bizzaro(x))` equals `x`.
+
+```{r}
+str_reverse <- function(x) {
+  purrr::map_chr(stringr::str_split(x, ""), 
+    ~ stringr::str_flatten(rev(.x))  
+  )
+}
+
+bizarro <- function(x) {
+  if (is.character(x)) {
+    str_reverse(x)
+  } else if (is.numeric(x)) {
+    -x
+  } else if (is.logical(x)) {
+    !x
+  } else {
+    stop(
+      "Don't know how to make bizzaro <", class(x)[[1]], ">", 
+      call. = FALSE)
+  }
+}
+```
+
+But 
+
+* `create_package("~/desktop/bizzaro")`
+* `use_mit_license()`
+* `use_r("bizarro")`
+
+```{r}
+#' @export
+bizarro <- function(x) {
+  # This uses magic to pass argumnts to the right method
+  UseMethod("bizarro")
+}
+
+#' @export
+bizarro.character <- function(x) {
+  str_reverse(x)
+}
+```
+
+**Your turn**: 
+* a numeric method that multiplies by -1
+* a logical method which inverts TRUE/FALSE
+* a data frame method that bizarros the column names, as well as each column.
+
+Finish that? Write some documentation and some basic tests. Get check passing.
+
+---
+
+```{r}
+bizarro.default <- function(x) {
+  stop(
+   "Don't know how to make bizzaro <", 
+   class(x)[[1]], ">", 
+   call. = FALSE 
+  )
+}
+```
+
+---
+
+**Your turn**: Add a method for factors. You can use this test if you want.
+
+```{r}
+test_that("bizarro factors have levels reversed", {
+  f1 <- factor(c("abc", "def", "abc"))
+  f2 <- factor(c("cba", "fed", "cba"))
+
+  expect_equal(bizarro(f1), f2)
+  expect_equal(bizarro(f2), f1)
+})
+```
+
+## Types and generics
+
+**Your turn** What type of output should you get? (maybe it shouldn't allowed, and you should error)
+
+  logical   -> numeric
+  numeric   -> numeric
+  date      -> date-time (hint: convert to a date time)
+  date-time -> date-time
+  duration  -> duration
+  list      -> error
+  character -> error
+  factor    -> error
+  ordered   -> error
+  ??? ->       error
+  
+**Your turn**: Make a mean2 generic and implement as many methods as you can in 10 minutes.
+
+Need to show example of date or duraton method - pattern of stripping data, applying function, then restoring attributes.
+
+
+## Combining data frames
+
+One of the reasons I started thinking about and working on this was combining multiple data frames in `rbind()`, then `plyr::rbind.fill()`, then `dplyr::bind_rows()`. But that first poses the question of how you combine vectors, i.e. how should `c()` work?
+
+---
+
+**Your turn**
+You've probably internalised the rules for numeric, logical, and character. Can you write them down?
+
+---
+
+Unfortunately these rules break down for S3 vectors:
+
+```{r}
+fa <- factor("a")
+fb <- factor("b")
+c(fa, fb)
+
+today <- as.Date("2019-09-13")
+lunch <- as.POSIXct("2018-09-13 13:00")
+
+c(today, lunch)
+c(lunch, today)
+
+c(today, fa)
+c(fa, today)
+
+lunch_nz <- as.POSIXct("2018-09-13 13:00", tz = "Pacific/Auckland")
+lunch_nz
+c(lunch_nz)
+```
+
+What makes them hard to understand?
+
+* Lack of symmetry: I think `c(x, y)` should yield the same type as `c(y, x)`
+  (obviously the values will be different)
+
+* Fails to recognise that some types are compatible with others.
+
+If you're interested in learning more, take a look at <https://vctrs.r-lib.org/index.html>.
+
+```{r, eval = FALSE}
+fa <- factor("a")
+fb <- factor("b")
+vec_c(fa, fb)
+
+today <- as.Date("2019-09-13")
+lunch <- as.POSIXct("2018-09-13 13:00")
+
+vec_c(today, lunch)
+vec_c(lunch, today)
+
+vec_c(today, fa)
+vec_c(fa, today)
+
+lunch_nz <- as.POSIXct("2018-09-13 13:00", tz = "Pacific/Auckland")
+lunch_nz
+vec_c(lunch_nz)
+
+# What if there multiple tzones? First one wins
+lunch_here <- as.POSIXct("2018-09-13 13:00")
+vec_c(lunch_nz, lunch_here)
+vec_c(lunch_here, lunch_nz)
+```
+
+See diagram in `?vec_ptype2` for rules.
+
+<!-- COMMIT TO GIT -->

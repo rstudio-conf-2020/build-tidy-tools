@@ -1,0 +1,13 @@
+# Side effects
+
+Side-effects vs. computation
+
+Why is entangling computation and side-effects bad?
+* Hard to compose/reuse/test
+
+Ways around it:
+* Print method
+* Multiple functions
+
+Communicating with the user
+* `cat()` vs `message()`

@@ -1,0 +1,393 @@
+# Function interface
+
+Goal for today is focus on the interface of functions, because I think this is an important change in mindset when you start developing functions. You have to think how they fit together into a greater whole.
+
+* interface = outside
+* implementation = inside
+
+More (very rough thoughts at) <http://design.tidyverse.org/>
+
+**Your turn**: What are the properties of a function that define its interface? (There are at least 9!)
+
+```{r}
+countdown::countdown_fullscreen(3)
+```
+
+* Name
+* Inputs (i.e. argument)
+  * Names
+  * Types
+  * Defaults
+  * Evaluation (NSE, tidy, ...)
+* Output
+* Errors (and other conditions)
+* Side-effects
+  * Saving files
+  * Messaging to user
+
+## Inputs and outputs
+
+(mostly). As motivated by base string functions vs. stringr function. 
+
+NB: I don't think string functions in base R are bad or wrong. But they grew organically over multiple years, and I think we can do better with some systematic anaylsis. Similarly, stringr functions aren't perfect, and there are definitely mistakes. Really important to critique existing work in order to get better. (And base string function have a good collection of problems)
+
+> "Each [function] is perfect the way it is .... and it can use a little improvement."
+> --- Shunryu Suzuki
+
+**Your turn**: What are some of the challenges of the base string functions? Think particularly about names, arguments, and outputs.
+
+```{r, eval = FALSE}
+strsplit(x, split, ...)
+grep(pattern, x, value = FALSE, ...)
+grepl(pattern, x, ...)
+sub(pattern, replacement, x, ...)
+gsub(pattern, replacement, x, ...)
+regexpr(pattern, text, ...)
+gregexpr(pattern, text, ...)
+regexec(pattern, text, ...)
+substr(x, start, stop)
+nchar(x, type, ...)
+```
+
+* Names
+  * No common theme. 
+  * No common prefix. 
+  * Names are concise at expense of expressiveness. (who is Greg?)
+  
+* Arguments
+  * Argument names & order are not consistent
+  * Data isn’t the first argument (2nd or 3rd). 
+  * Sometimes `text`, sometimes `x`. 
+  * Not always independent.
+
+* Outputs:
+  * Can’t feed output of `gregexpr()` into `substr()`
+
+* Errors?
+* Side-effects?
+
+## Names
+
+> "A rose by any other name would smell as sweet."
+> --- Shakespeare
+
+> "A function by any other name would not smell as sweet."
+> --- me
+
+Name of function is really important part of its interface because it's the mental hook upon which the functionality is hang. Me and my team spend a lot of time dicussing sames.
+
+### Most function name should be verbs
+
+Because they _do_ something
+
+**Your turn**: Match the following functions and arguments to their stringr equivalents.
+
+```{r}
+strsplit()          # -> str_split()
+grep()              # -> str_which() 
+grepl(value = TRUE) # -> str_subset()
+grepl()     # -> str_detect()
+sub()       # -> str_replace()
+gsub()      # -> str_replace_all()
+```
+
+Some problems: what's the difference between `str_detect()`, `str_which()`, and `str_subset()`? Differ primarily in their output type. English verbs too similar:
+
+```{r}
+str_detect() - str_something_lgl()
+str_which()  - str_something_int()
+str_subset() - str_something_chr()
+```
+
+Another way to think about it is that some function work with chararacters in a string, which others work with strings in a character vector.
+
+```{r}
+str_locate_vec()
+str_locate_str()
+```
+
+---
+
+Verbs aren't always essential; nouns can work when you're building up objects
+
+```{r, eval = FALSE}
+library(ggplot2)
+
+geom_line()
+scale_x_continuous()
+coord_fixed()
+```
+
+Or extracting properties:
+
+```{r, eval = FALSE}
+str_length()
+```
+
+And sometimes there isn't a good verb:
+
+```{r}
+str_to_lower()
+str_to_upper()
+```
+
+### Prefixes and suffixes
+
+* `snake_case` vs `camelCase`. I don't think one is intrinsically better  
+  than the other. But consistency is VERY IMPORTANT. I use snake_case
+  (mostly because of my background with ruby).
+
+* Use prefixes to group together related functions. 
+  Main advantage is autocomplete. 
+  Shiny is a counter example.
+  Not necessary to have common prefix for every function in package.
+
+* Use suffixes for variations on a theme.
+    * `str_replace()` and `str_replace_all()`
+    * `str_split()` and `str_split_fixed()`
+
+**Your turn**: What stringr (and other tidyverse) functions don't use these principles?
+
+---
+
+```{r, eval = FALSE}
+# Don't start with str_
+invert_match()
+word()
+fixed()
+regexp()
+
+# Aren't verbs
+str_which()
+str_c()
+str_sub()
+```
+
+Suffixes vs. arguments: always use a suffix if the type is different.
+
+```{r}
+str_to_upper()
+str_to_lower()
+str_to_title()
+str_to_sentence()
+# probably should be
+str_capitalise(x, to = "upper")
+str_capitalise(x, to = "lower")
+str_capitalise(x, to = "title")
+str_capitalise(x, to = "sentence")
+# BUT
+str_capitalize() # ?
+```
+
+## Arguments
+
+* Names
+* Types
+* Required arguments
+* Hidden arguments
+* Enumms
+* Keeping arguments independent
+
+### Names
+
+Just be consistent!
+
+```{r}
+gsub(pattern, replacement, x, fixed = TRUE, ignore.case = TRUE)
+gregexpr(pattern, text, fixed = TRUE)
+```
+
+```{r}
+install.packages(contriburl=, configure.vars =, keep_outputs=, Ncpus=, cacheOK =, INSTALL_opts=, )
+```
+
+### Types
+
+**Your turn**: Can divide the following arguments into function groups? To get started, I think `x` and `text` form one group.
+
+```{r}
+strsplit(x, split, fixed = TRUE)
+grepl(pattern, x, fixed = TRUE, ignore.case = TRUE)
+gsub(pattern, replacement, x, fixed = TRUE, ignore.case = TRUE)
+gregexpr(pattern, text, fixed = TRUE)
+substr(x, start, stop)
+```
+
+(These are not very good but they're the best we have)
+
+* Data: `x` or `text`. Primary vector of data. Often called `x` or `data`.
+  Required. Controls shape/type of output
+
+* Descriptors: `pattern`, `replacement`, `start`, `stop`. 
+  Required. Usually only 2 or 3 more
+  V. important.
+
+* Details: `fixed`, `ignore.case`, `perl`, `useBytes` etc
+  Optional.
+  Often a scalar.
+
+---
+
+These categories are important because they guide how we call a function. And how we organise
+
+* Data
+* Descriptors
+* Dots (if used)
+* Details
+
+Benefits:
+
+* Works with pipe.
+* Ordered from most important to least important
+* Required arguments come before optional. 
+* Forces details to be named.
+
+### Required
+
+**Your turn**: Which arguments are required and optional in these functions? You'll need to look at signature and read docs.
+
+```{r}
+lm()
+sample()
+diag()
+str_replace_all()
+```
+
+---
+
+Stick to this simple rule:
+* Required <-> no default
+* Optional <-> has default
+
+Warning sign: use of `missing()`. If know what it is, don't use it. If you don't; don't learn it.
+
+### Hidden
+
+**Your turn**: Do these functions always return the same results?
+
+```{r}
+data.frame(x = "abc")
+tolower("I")
+sort(letters)
+```
+
+---
+
+```{r}
+str_to_lower("I")
+str_to_lower("I", locale = "tr")
+
+
+# https://en.wikipedia.org/wiki/Swedish_alphabet
+str_sort(c("a", "o", "z", "å", "ø"))
+str_sort(c("a", "o", "z", "å", "ø"), locale = "se")
+```
+
+<https://www.vice.com/en_us/article/zmjwda/a-code-glitch-may-have-caused-errors-in-more-than-100-published-studies>
+
+---
+
+Obviously bad; generally either straightforward to avoid or you don't know about them. Mostly related to locale.
+
+Americentrism vs code that works everywhere.
+
+### Enums
+
+**Your turn**: What do these functions have in common?
+
+```{r}
+trimws()
+str_trunc()
+rank()
+```
+
+---
+
+This is a really useful technique if you have an argument that takes a small set of possible values. Key is use of `match.arg()`
+
+### Independence
+
+```{r}
+grepl(".x", "XY.X", fixed = TRUE, ignore.case = TRUE)
+grepl(".x", "XY.X", fixed = TRUE, perl = TRUE)
+```
+
+```{r, error = TRUE}
+rgamma(5, shape = 1, rate = 2, scale = 1/2)
+rgamma(5, shape = 1, rate = 2, scale = 2)
+```
+
+stringr takes a different approach:
+
+```{r}
+str_detect("XY", fixed("x"))
+str_detect("XY", regex("x", multline = TRUE))
+str_detect("XY", fixed("x", ignore_case = TRUE))
+str_detect("X Y", boundary("word"))
+```
+
+## Output
+
+### Working with input
+
+Exception is (I think) two mutually acceptable arguments, or when one function returns a complex object that could be pulled apart into multiple objects.
+
+```{r}
+str_sub(x, 1, 2)
+str_sub(x, str_locate(x, "a+"))
+```
+
+```{r}
+x <- c("bbaab", "bbb", "bbaaba")
+loc <- regexpr("a+", x)
+substr(x, loc, loc + attr(loc, "match.length") - 1)
+
+# And only works because this returns ""
+substr(x, -1, -3)
+
+# regmatches() has a different problem
+regmatches(x, loc)
+```
+
+### Invariants
+
+Useful to be able to describe the output of a function using a few simple statements that we'll call invariants. For example take `str_sub()`.
+
+* Output is always a character vector
+* Output has length `max(length(string, start, end))` (using recycling rules)
+
+What about `str_detect()`?
+
+* What is the output type?
+* What size is it?
+
+**Your turn**: How can you describe the output of `grep()`?
+
+---
+
+As a general principle, I think functions with smaller/shorter/simpler/standard invariants are better because they're more likely to stay in your head. But more on that in a little bit. 
+
+Often important to think about invariants when things are bit unusual. 
+
+What happens when there isn't a match?
+
+**Your turn**: Are these results consistent?
+
+<!-- Expand on these - should analyse locate() and locate_all() inviarnats first -->
+
+```{r}
+x <- c(NA, "", "x", "y")
+str_match(x, "(y)")
+str_match_all(x, "(y)")
+str_extract(x, "y")
+str_extract_all(x, "y")
+str_locate(x, "y")
+str_locate_all(x, "y")
+
+str_split(x, "x")
+str_split_fixed(x, "x", 2)
+```
+
+* `str_locate()` and zero length match - end is one less that start (think about length)
+* length of output for `str_locate_all(NA, "x")` should be zero - invariant is that `NA` matches nothing - 
+  not possible to convey enough information for otherwise.

@@ -33,6 +33,12 @@ by Charlotte Wickham and Hadley Wickham
 * [Unit Tests](2-testing.pdf)
 * [Documentation and Sharing](3-sharing.pdf)
 
+## Code
+
+Find our live coded notes in [`notes/`](notes/) as we commit them.
+
+You can see the scripts we'll work from in [`script/`](script/), but we recommend not reading too far ahead because you'll find answers to some of the exercises, and you'll learn more if you try to work through them first.
+
 ## Questions?
 
 Feel free to ask questions in the [Building Tidy Tools Workshop RStudio Community thread](https://community.rstudio.com/t/building-tidy-tools-workshop-rstudio-conf-2020/49091).
@@ -65,10 +71,27 @@ The materials will evolve as the workshop approaches, so if you want to pre-down
 
 Please make sure you've installed the following packages:
 
-``` r
-install.packages("devtools")
-install.packages(c("fs", "glue", "lobstr", "rematch2", "sloop", "vctrs"))
-devtools::install_github("r-lib/itdepends")
+```{r, echo = FALSE, include = FALSE}
+deps <- unique(sort(renv::dependencies()$Package))
+deps <- setdiff(deps, c(
+  "ns", # created during class
+  "rmarkdown", "knitr", # only needed for .Rmd
+  "countdown", # only needed for instructor
+  "renv", # only needed for this block
+  "itdepends", # not on CRAN
+  "bizarro", # making it 
+  c("stats", "MASS", "datasets"), # recommended
+  c("devtools", "roxygen2", "testthat"),
+  tidyverse::tidyverse_packages(),
+  NULL
+))
+install <- c(
+  'install.packages("devtools")',
+  paste0("install.packages(c(", paste0(encodeString(deps, quote = '"'), collapse = ", "), "))"),
+  'devtools::install_github("r-lib/itdepends")'
+)
+```
+```{r code = install, eval = FALSE}
 ```
 
 ``` r
@@ -86,7 +109,6 @@ usethis::create_from_github("hadley/fordogs", fork = FALSE, protocol = "https")
 * When you're done, put a green post-it on your computer. 
 * If you need help, put up a pink post-it.
 -->
-
 
 ## Schedule
 
