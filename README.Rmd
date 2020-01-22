@@ -29,7 +29,8 @@ by Charlotte Wickham and Hadley Wickham
 
 ## Slides
 
-* [Introduction and "Whole Game"](1-intro.pdf)
+* [Introduction and "The Whole Game"](1-intro.pdf)
+* [Testing](2-testing.pdf)
 
 ## Questions?
 
