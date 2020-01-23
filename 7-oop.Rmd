@@ -1,0 +1,221 @@
+# Object-oriented programming
+
+* Base types - `typeof()`
+* S3 - simplest system of OOP. Adding attributes to an object.
+  The most important attribute `class`
+* S4 - robust, but much more complicated, and unless you're working with Bioconductor. Don't use until there's a good book about it.
+* R6 - very different to S3/S4, it's much more like OOP in python or javascript, or basically any other popular programming language of the last 20 years (apart from Julia). Powers reticulate. Useful in various places in Shiny. Avoided unless you really need it.
+
+Five chapters: <https://adv-r.hadley.nz>.
+
+## S3
+
+The simplest thing that might possibly work. Built on top of regular R objects (atomic vectors, lists, functions, ...).
+
+```{r}
+df <- data.frame()
+f <- factor()
+mod <- lm(mpg ~ cyl, data = mtcars)
+sloop::otype(df)
+sloop::otype(f)
+sloop::otype(mod)
+sloop::otype(1:30)
+sloop::otype(tibble::tibble())
+typeof(tibble::tibble())
+typeof(df)
+typeof(f)
+typeof(mod)
+attributes(df)
+attributes(tibble::tibble())
+attributes(f)
+attributes(mod)
+```
+
+```{r}
+dt <- tibble::tibble(x = 1)
+sloop::s3_dispatch(print(dt))
+```
+
+* `print()` is called a **generic function** = interface
+* specific function is called **method** = implementation
+
+(F1 = help; F2 = definition)
+
+```{r}
+new_foo <- function() {
+  x <- list()
+  class(x) <- "foo"
+  x
+}
+y <- new_foo()
+sloop::s3_dispatch(print(y))
+print.foo <- function(x, ...) {
+  cat("Hello!\n")
+  invisible(x)
+}
+sloop::s3_dispatch(print(y))
+print(y)
+y
+z <- 1:10
+class(z) <- "test"
+t(z)
+t
+sloop::s3_dispatch(t(z))
+# calls t.test() 
+# because t.test is named like method
+# this is why you should never use . in your function names
+t
+sloop::ftype(t)
+```
+
+```{r}
+foo <- function(x) x + 1
+class(foo) <- "sneaky"
+print.sneaky <- function(x, ...) {
+  cat("function(x) x + 2\n")
+}
+foo
+foo(1)
+```
+
+
+An S3 object is just an object with a class attribute. And you can change the class!!!
+
+```{r}
+x <- factor(1:10)
+class(x)
+class(x) <- "Date"
+```
+
+S3 is the type of system that lets you point the gun at your foot. Just don't pull the trigger.
+
+Note that prototypes are an idea implemented in vctrs; and hence the names are meaningful. S3 classes are implemented in base R and hence the names are historical.
+
+## Behaviour
+
+These objects behaviour differently because many functions in R are **generics**. Generics are functions with a (mostly) constant interface, but different implementations, called **methods**, depending on the class of the object.
+
+This makes R different to most object oriented systems (apart from Julia). Usually methods belong to a class. But in S3 methods belong to a generic function.
+
+You can often tell if a function is a generic because it will call `UseMethod()`. But some do dispatch in C, so you'll need `sloop::ftype()`. The most important generic function is print. The name of a method is just `{generic}.{class}`, and this is usually what you need to find help.
+
+The details can get a bit more complicated so you can use `sloop::s3_dispatch()` to find it:
+
+```{r}
+library(sloop)
+s3_dispatch(print(ordered(1:3)))
+```
+
+Then `s3_get_method()` to find the implementation.
+
+**Your turn**: Find the implementation of print for factors, numerics, and dates.
+
+```{r}
+s3_get_method(print.Date)
+s3_get_method(print.POSIXct)
+s3_get_method(print.factor)
+```
+
+S3 also powers non-vector objects:
+
+```{r}
+mod <- lm(mpg ~ wt, data = mtcars)
+summary(mod)
+
+s3_class(mod)
+s3_dispatch(print(mod))
+s3_dispatch(summary(mod))
+```
+
+What's a vector vs not a vector? It's hard to define it precisely, but if it's something you'd imagine putting in a data frame then it's a vector.
+
+## Creating new generics
+
+```{r}
+bizarro("abc")
+#> [1] "cba"
+
+bizarro(1)
+#> [1] -1
+
+bizarro(c(TRUE, FALSE))
+#> [1] FALSE TRUE
+```
+
+Key invariants:
+* `vec_ptype(bizzaro(x))` equals `vec_ptype(x)`
+* `bizzaro(bizzaro(x))` equals `x`.
+
+```{r}
+str_reverse <- function(x) {
+  purrr::map_chr(stringr::str_split(x, ""), 
+    ~ stringr::str_flatten(rev(.x))  
+  )
+}
+
+bizarro <- function(x) {
+  if (is.character(x)) {
+    str_reverse(x)
+  } else if (is.numeric(x)) {
+    -x
+  } else if (is.logical(x)) {
+    !x
+  } else {
+    stop(
+      "Don't know how to make bizzaro <", class(x)[[1]], ">", 
+      call. = FALSE)
+  }
+}
+```
+
+But 
+
+* `create_package("~/desktop/bizzaro")`
+* `use_mit_license()`
+* `use_r("bizarro")`
+
+```{r}
+#' @export
+bizarro <- function(x) {
+  # This uses magic to pass argumnts to the right method
+  UseMethod("bizarro")
+}
+
+#' @export
+bizarro.character <- function(x) {
+  str_reverse(x)
+}
+```
+
+**Your turn**: 
+* a numeric method that multiplies by -1
+* a logical method which inverts TRUE/FALSE
+* a data frame method that bizarros the column names, as well as each column.
+
+Finish that? Write some documentation and some basic tests. Get check passing.
+
+---
+
+```{r}
+bizarro.default <- function(x) {
+  stop(
+   "Don't know how to make bizzaro <", 
+   class(x)[[1]], ">", 
+   call. = FALSE 
+  )
+}
+```
+
+---
+
+**Your turn**: Add a method for factors. You can use this test if you want.
+
+```{r}
+test_that("bizarro factors have levels reversed", {
+  f1 <- factor(c("abc", "def", "abc"))
+  f2 <- factor(c("cba", "fed", "cba"))
+
+  expect_equal(bizarro(f1), f2)
+  expect_equal(bizarro(f2), f1)
+})
+```

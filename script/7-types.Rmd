@@ -190,146 +190,149 @@ It's hard to construct these directly from their underlying data types in base R
 
 ---
 
-An S3 object is just an object with a class attribute. And you can change the class!!!
+<!-- Charlotte stealing content for OOP -->
 
-```{r}
-x <- factor(1:10)
-class(x)
-class(x) <- "Date"
-```
+<!-- An S3 object is just an object with a class attribute. And you can change the class!!! -->
 
-S3 is the type of system that lets you point the gun at your foot. Just don't pull the trigger.
+<!-- ```{r} -->
+<!-- x <- factor(1:10) -->
+<!-- class(x) -->
+<!-- class(x) <- "Date" -->
+<!-- ``` -->
 
-Note that prototypes are an idea implemented in vctrs; and hence the names are meaningful. S3 classes are implemented in base R and hence the names are historical.
+<!-- S3 is the type of system that lets you point the gun at your foot. Just don't pull the trigger. -->
 
-## Behaviour
+<!-- Note that prototypes are an idea implemented in vctrs; and hence the names are meaningful. S3 classes are implemented in base R and hence the names are historical. -->
 
-These objects behaviour differently because many functions in R are **generics**. Generics are functions with a (mostly) constant interface, but different implementations, called **methods**, depending on the class of the object.
+<!-- ## Behaviour -->
 
-This makes R different to most object oriented systems (apart from Julia). Usually methods belong to a class. But in S3 methods belong to a generic function.
+<!-- These objects behaviour differently because many functions in R are **generics**. Generics are functions with a (mostly) constant interface, but different implementations, called **methods**, depending on the class of the object. -->
 
-You can often tell if a function is a generic because it will call `UseMethod()`. But some do dispatch in C, so you'll need `sloop::ftype()`. The most important generic function is print. The name of a method is just `{generic}.{class}`, and this is usually what you need to find help.
+<!-- This makes R different to most object oriented systems (apart from Julia). Usually methods belong to a class. But in S3 methods belong to a generic function. -->
 
-The details can get a bit more complicated so you can use `sloop::s3_dispatch()` to find it:
+<!-- You can often tell if a function is a generic because it will call `UseMethod()`. But some do dispatch in C, so you'll need `sloop::ftype()`. The most important generic function is print. The name of a method is just `{generic}.{class}`, and this is usually what you need to find help. -->
 
-```{r}
-library(sloop)
-s3_dispatch(print(ordered(1:3)))
-```
+<!-- The details can get a bit more complicated so you can use `sloop::s3_dispatch()` to find it: -->
 
-Then `s3_get_method()` to find the implementation.
+<!-- ```{r} -->
+<!-- library(sloop) -->
+<!-- s3_dispatch(print(ordered(1:3))) -->
+<!-- ``` -->
 
-**Your turn**: Find the implementation of print for factors, numerics, and dates.
+<!-- Then `s3_get_method()` to find the implementation. -->
 
-```{r}
-s3_get_method(print.Date)
-s3_get_method(print.POSIXct)
-s3_get_method(print.factor)
-```
+<!-- **Your turn**: Find the implementation of print for factors, numerics, and dates. -->
 
-S3 also powers non-vector objects:
+<!-- ```{r} -->
+<!-- s3_get_method(print.Date) -->
+<!-- s3_get_method(print.POSIXct) -->
+<!-- s3_get_method(print.factor) -->
+<!-- ``` -->
 
-```{r}
-mod <- lm(mpg ~ wt, data = mtcars)
-summary(mod)
+<!-- S3 also powers non-vector objects: -->
 
-s3_class(mod)
-s3_dispatch(print(mod))
-s3_dispatch(summary(mod))
-```
+<!-- ```{r} -->
+<!-- mod <- lm(mpg ~ wt, data = mtcars) -->
+<!-- summary(mod) -->
 
-What's a vector vs not a vector? It's hard to define it precisely, but if it's something you'd imagine putting in a data frame then it's a vector.
+<!-- s3_class(mod) -->
+<!-- s3_dispatch(print(mod)) -->
+<!-- s3_dispatch(summary(mod)) -->
+<!-- ``` -->
 
-## Creating new generics
+<!-- What's a vector vs not a vector? It's hard to define it precisely, but if it's something you'd imagine putting in a data frame then it's a vector. -->
 
-```{r}
-bizarro("abc")
-#> [1] "cba"
+<!-- ## Creating new generics -->
 
-bizarro(1)
-#> [1] -1
+<!-- ```{r} -->
+<!-- bizarro("abc") -->
+<!-- #> [1] "cba" -->
 
-bizarro(c(TRUE, FALSE))
-#> [1] FALSE TRUE
-```
+<!-- bizarro(1) -->
+<!-- #> [1] -1 -->
 
-Key invariants:
-* `vec_ptype(bizzaro(x))` equals `vec_ptype(x)`
-* `bizzaro(bizzaro(x))` equals `x`.
+<!-- bizarro(c(TRUE, FALSE)) -->
+<!-- #> [1] FALSE TRUE -->
+<!-- ``` -->
 
-```{r}
-str_reverse <- function(x) {
-  purrr::map_chr(stringr::str_split(x, ""), 
-    ~ stringr::str_flatten(rev(.x))  
-  )
-}
+<!-- Key invariants: -->
+<!-- * `vec_ptype(bizzaro(x))` equals `vec_ptype(x)` -->
+<!-- * `bizzaro(bizzaro(x))` equals `x`. -->
 
-bizarro <- function(x) {
-  if (is.character(x)) {
-    str_reverse(x)
-  } else if (is.numeric(x)) {
-    -x
-  } else if (is.logical(x)) {
-    !x
-  } else {
-    stop(
-      "Don't know how to make bizzaro <", class(x)[[1]], ">", 
-      call. = FALSE)
-  }
-}
-```
+<!-- ```{r} -->
+<!-- str_reverse <- function(x) { -->
+<!--   purrr::map_chr(stringr::str_split(x, ""),  -->
+<!--     ~ stringr::str_flatten(rev(.x))   -->
+<!--   ) -->
+<!-- } -->
 
-But 
+<!-- bizarro <- function(x) { -->
+<!--   if (is.character(x)) { -->
+<!--     str_reverse(x) -->
+<!--   } else if (is.numeric(x)) { -->
+<!--     -x -->
+<!--   } else if (is.logical(x)) { -->
+<!--     !x -->
+<!--   } else { -->
+<!--     stop( -->
+<!--       "Don't know how to make bizzaro <", class(x)[[1]], ">",  -->
+<!--       call. = FALSE) -->
+<!--   } -->
+<!-- } -->
+<!-- ``` -->
 
-* `create_package("~/desktop/bizzaro")`
-* `use_mit_license()`
-* `use_r("bizarro")`
+<!-- But  -->
 
-```{r}
-#' @export
-bizarro <- function(x) {
-  # This uses magic to pass argumnts to the right method
-  UseMethod("bizarro")
-}
+<!-- * `create_package("~/desktop/bizzaro")` -->
+<!-- * `use_mit_license()` -->
+<!-- * `use_r("bizarro")` -->
 
-#' @export
-bizarro.character <- function(x) {
-  str_reverse(x)
-}
-```
+<!-- ```{r} -->
+<!-- #' @export -->
+<!-- bizarro <- function(x) { -->
+<!--   # This uses magic to pass argumnts to the right method -->
+<!--   UseMethod("bizarro") -->
+<!-- } -->
 
-**Your turn**: 
-* a numeric method that multiplies by -1
-* a logical method which inverts TRUE/FALSE
-* a data frame method that bizarros the column names, as well as each column.
+<!-- #' @export -->
+<!-- bizarro.character <- function(x) { -->
+<!--   str_reverse(x) -->
+<!-- } -->
+<!-- ``` -->
 
-Finish that? Write some documentation and some basic tests. Get check passing.
+<!-- **Your turn**:  -->
+<!-- * a numeric method that multiplies by -1 -->
+<!-- * a logical method which inverts TRUE/FALSE -->
+<!-- * a data frame method that bizarros the column names, as well as each column. -->
 
----
+<!-- Finish that? Write some documentation and some basic tests. Get check passing. -->
 
-```{r}
-bizarro.default <- function(x) {
-  stop(
-   "Don't know how to make bizzaro <", 
-   class(x)[[1]], ">", 
-   call. = FALSE 
-  )
-}
-```
+<!-- --- -->
 
----
+<!-- ```{r} -->
+<!-- bizarro.default <- function(x) { -->
+<!--   stop( -->
+<!--    "Don't know how to make bizzaro <",  -->
+<!--    class(x)[[1]], ">",  -->
+<!--    call. = FALSE  -->
+<!--   ) -->
+<!-- } -->
+<!-- ``` -->
 
-**Your turn**: Add a method for factors. You can use this test if you want.
+<!-- --- -->
 
-```{r}
-test_that("bizarro factors have levels reversed", {
-  f1 <- factor(c("abc", "def", "abc"))
-  f2 <- factor(c("cba", "fed", "cba"))
+<!-- **Your turn**: Add a method for factors. You can use this test if you want. -->
 
-  expect_equal(bizarro(f1), f2)
-  expect_equal(bizarro(f2), f1)
-})
-```
+<!-- ```{r} -->
+<!-- test_that("bizarro factors have levels reversed", { -->
+<!--   f1 <- factor(c("abc", "def", "abc")) -->
+<!--   f2 <- factor(c("cba", "fed", "cba")) -->
+
+<!--   expect_equal(bizarro(f1), f2) -->
+<!--   expect_equal(bizarro(f2), f1) -->
+<!-- }) -->
+<!-- ``` -->
+<!-- END Charlotte stealing content for OOP -->
 
 ## Types and generics
 
