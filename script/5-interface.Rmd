@@ -25,9 +25,12 @@ countdown::countdown_fullscreen(3)
   * Saving files
   * Messaging to user
 
-## Inputs and outputs
+```{r setup}
+library(stringr)
+```
 
-(mostly). As motivated by base string functions vs. stringr function. 
+
+## base R vs stringr
 
 NB: I don't think string functions in base R are bad or wrong. But they grew organically over multiple years, and I think we can do better with some systematic anaylsis. Similarly, stringr functions aren't perfect, and there are definitely mistakes. Really important to critique existing work in order to get better. (And base string function have a good collection of problems)
 
@@ -76,27 +79,29 @@ nchar(x, type, ...)
 
 Name of function is really important part of its interface because it's the mental hook upon which the functionality is hang. Me and my team spend a lot of time dicussing sames.
 
-### Most function name should be verbs
+### Function should be verbs (usually)
 
 Because they _do_ something
 
-**Your turn**: Match the following functions and arguments to their stringr equivalents.
+**Your turn**: Match the following functions and arguments to their stringr equivalents. What are some issues with the base functions? What are some issues with the stringr equivalents?
+
 
 ```{r}
-strsplit()          # -> str_split()
-grep()              # -> str_which() 
 grepl(value = TRUE) # -> str_subset()
-grepl()     # -> str_detect()
-sub()       # -> str_replace()
-gsub()      # -> str_replace_all()
+grep()              # -> str_which() 
+grepl()             # -> str_detect()
+sub()               # -> str_replace()
+gsub()              # -> str_replace_all()
+strsplit()          # -> str_split()
+regexpr()           # -> str_locate()
 ```
 
-Some problems: what's the difference between `str_detect()`, `str_which()`, and `str_subset()`? Differ primarily in their output type. English verbs too similar:
+Some problems: what's the difference between `str_detect()`, `str_which()`, and `str_subset()`? (Similarly problem with `dplyr::transmute()` and `dplyr::mutate()`) Differ primarily in their output type. English verbs too similar:
 
 ```{r}
-str_detect() - str_something_lgl()
-str_which()  - str_something_int()
-str_subset() - str_something_chr()
+str_detect() # str_something_lgl() ?
+str_which()  # str_something_int() ?
+str_subset() # str_something_chr() ?
 ```
 
 Another way to think about it is that some function work with chararacters in a string, which others work with strings in a character vector.
@@ -105,6 +110,10 @@ Another way to think about it is that some function work with chararacters in a 
 str_locate_vec()
 str_locate_str()
 ```
+
+---
+
+**Your turn**: Most ggplot2 functions aren't verbs. Is this a good idea? If they were to be verb, what would you call them? Discuss
 
 ---
 
@@ -124,7 +133,7 @@ Or extracting properties:
 str_length()
 ```
 
-And sometimes there isn't a good verb:
+And sometimes there just isn't a good verb:
 
 ```{r}
 str_to_lower()
@@ -135,7 +144,8 @@ str_to_upper()
 
 * `snake_case` vs `camelCase`. I don't think one is intrinsically better  
   than the other. But consistency is VERY IMPORTANT. I use snake_case
-  (mostly because of my background with ruby).
+  (mostly because of my background with ruby). Please don't be like
+  `install.packages()`
 
 * Use prefixes to group together related functions. 
   Main advantage is autocomplete. 
@@ -156,20 +166,22 @@ invert_match()
 word()
 fixed()
 regexp()
-
-# Aren't verbs
-str_which()
-str_c()
-str_sub()
 ```
 
-Suffixes vs. arguments: always use a suffix if the type is different.
+---
+
+When should you make multiple functions rather than using an argument? If it changes the _type_ of output, always make it a function. If the argument would interact with other arguments, probably should be a function.  
+
+If there are many options, an argument probably better. Sometimes only obvious in retrospect.
 
 ```{r}
+# Sarted with
 str_to_upper()
 str_to_lower()
+# Then added
 str_to_title()
 str_to_sentence()
+
 # probably should be
 str_capitalise(x, to = "upper")
 str_capitalise(x, to = "lower")
@@ -181,25 +193,11 @@ str_capitalize() # ?
 
 ## Arguments
 
-* Names
 * Types
 * Required arguments
 * Hidden arguments
 * Enumms
 * Keeping arguments independent
-
-### Names
-
-Just be consistent!
-
-```{r}
-gsub(pattern, replacement, x, fixed = TRUE, ignore.case = TRUE)
-gregexpr(pattern, text, fixed = TRUE)
-```
-
-```{r}
-install.packages(contriburl=, configure.vars =, keep_outputs=, Ncpus=, cacheOK =, INSTALL_opts=, )
-```
 
 ### Types
 
@@ -259,7 +257,9 @@ Stick to this simple rule:
 * Required <-> no default
 * Optional <-> has default
 
-Warning sign: use of `missing()`. If know what it is, don't use it. If you don't; don't learn it.
+Warning sign: use of `missing()`. If know what it is, don't use it. If you don't; don't learn it. 
+
+(There are occassional exceptions where you have two mutually exclusive arguments, e.g. `rvest::html_node(css, xpath)`)
 
 ### Hidden
 
@@ -277,7 +277,6 @@ sort(letters)
 str_to_lower("I")
 str_to_lower("I", locale = "tr")
 
-
 # https://en.wikipedia.org/wiki/Swedish_alphabet
 str_sort(c("a", "o", "z", "å", "ø"))
 str_sort(c("a", "o", "z", "å", "ø"), locale = "se")
@@ -290,6 +289,11 @@ str_sort(c("a", "o", "z", "å", "ø"), locale = "se")
 Obviously bad; generally either straightforward to avoid or you don't know about them. Mostly related to locale.
 
 Americentrism vs code that works everywhere.
+
+```{r}
+readr::locale()
+```
+
 
 ### Enums
 
@@ -325,6 +329,32 @@ str_detect("XY", regex("x", multline = TRUE))
 str_detect("XY", fixed("x", ignore_case = TRUE))
 str_detect("X Y", boundary("word"))
 ```
+
+### Type stability
+
+Not a big problem with string functions.
+
+**Your turn**: Assuming this code works (with out errors or warnings):
+
+```{r}
+y <- sum(x)
+```
+
+* What do you know about `x`?
+  * Numeric or logical vector (or matrix/array)
+  
+* What do you know about `y`?
+  * Length 1
+  * Numeric
+
+**Your turn**: Assuming that `df` is a data frame, and this code works (with out errors or warnings):
+
+```{r}
+df[, i]
+```
+
+* What do you know about `i`?
+* What do you know about the result?
 
 ## Output
 
@@ -371,18 +401,21 @@ Often important to think about invariants when things are bit unusual.
 
 What happens when there isn't a match?
 
+**Your turn**: Why can `str_locate()` return a matrix while `str_locale_all()` has to return a list? Why does it return a matrix and not a data frame? Why are the return values different when there is no match?
+
+```{r}
+x <- c(NA, "", "x", "y", "yy")
+str_locate(x, "y")
+str_locate_all(x, "y")
+```
+
 **Your turn**: Are these results consistent?
 
 <!-- Expand on these - should analyse locate() and locate_all() inviarnats first -->
 
 ```{r}
-x <- c(NA, "", "x", "y")
-str_match(x, "(y)")
-str_match_all(x, "(y)")
 str_extract(x, "y")
 str_extract_all(x, "y")
-str_locate(x, "y")
-str_locate_all(x, "y")
 
 str_split(x, "x")
 str_split_fixed(x, "x", 2)
