@@ -227,51 +227,7 @@ my_count <- function(x) {
 }
 ```
 
-You'll see the error straight away so `R CMD check` isn't so important
-
-**Your turn**: Make this function work by adding the necessary imports.
-
-### Other options
-
-```{r}
-my_sd <- function (x, na.rm = FALSE) {
-  sqrt(stats::var(x, na.rm = na.rm))
-}
-```
-
-```{r}
-#' @import stats
-my_sd <- function (x, na.rm = FALSE) {
-  sqrt(var(x, na.rm = na.rm))
-}
-```
-
-For functions that you only use in few functions I think this is easier for the human (although it's slightly more work for the computer)
-
-* Never use `@import`
-* Prefer `::`
-* Use `@importFrom` when `::` gets annoying, or for infix functions (more on that later)
-
-### Never do this
-
-```{r}
-var <- stats::var
-```
-
-* This creates a copy of `stats::vars` when the package is built
-
-* If the functions `stats::var` calls change, you can end up with a function
-  that is subtly out of sync - this causes problems that are nightmarishly
-  difficult to track down (seriously it took me and Winston like 6 months
-  to figure this out the first time we did it.)
-
-### `NAMESPACE`
-
-Looking at the NAMESPACE file can be a useful way to get a glimpse of the whole package.
-
-## DESCRIPTION
-
-The stats package is special because it's a base package that's always available. That makes life easier. What happens if we import from another CRAN package? 
+You'll see the error straight away so `R CMD check` isn't so important But, if you `use_package()` then:
 
 ```{r}
 #' @importFrom ggplot2 ggplot
@@ -294,6 +250,61 @@ It's telling you (in a roundabout way) that your `NAMESPACE` depends on a packag
 
 Why didn't stats need this? Because it's a recommended package; so R knows that it's always going to be avaiable/installed.
 
+### Other options
+
+```{r}
+my_sd <- function (x, na.rm = FALSE) {
+  sqrt(stats::var(x, na.rm = na.rm))
+}
+```
+
+```{r}
+#' @import stats
+my_sd <- function (x, na.rm = FALSE) {
+  sqrt(var(x, na.rm = na.rm))
+}
+```
+
+For functions that you only use in a few place I think this is easier for the human (although it's slightly more work for the computer)
+
+* Never use `@import`
+* Prefer `::`
+* Use `@importFrom` when `::` gets annoying, or for infix functions (more on that later)
+
+### Never do this
+
+```{r}
+var <- stats::var
+```
+
+* This creates a copy of `stats::vars` when the package is built
+
+* If the functions `stats::var` calls change, you can end up with a function
+  that is subtly out of sync - this causes problems that are nightmarishly
+  difficult to track down (seriously it took me and Winston like 6 months
+  to figure this out the first time we did it.)
+
+### Practice
+
+* Put this in a package called counting
+* Document it
+* Get R CMD check passing
+
+```{r}
+my_count <- function(x) {
+  count(tibble(x = x), x, sort = TRUE)
+}
+```
+
+### Recap of ways to use a function from another package?
+
+Always start with `use_package()`
+
+* `::`, default, have to use for data.
+* `@importFrom` common functions,  infix functions (like the pipe)
+* `@import` only for packages specifically designed to be used in this way
+* `foo <- pkg::foo` never do this unless you enjoy spending hours debugging.
+
 ## When to take a dependency?
 
 **Your turn**: Brainstorm the costs and benefits of taking a dependency.
@@ -314,7 +325,13 @@ Most of the costs are proportional to the number of people using your package. S
 
 ---
 
-**Your turn**: How can you measure the costs? Look at the CRAN pages for glue vs. dplyr. What can you learn? 
+**Your turn**: How can you measure the costs? Look at the CRAN pages for glue vs. dplyr. What can you quantify?
+
+* how many other packages use?
+* number of github issues: 24 (glue) vs 67 (dplyr)
+* needed packags: 0 (glue) vs 13+ (dplyr)
+* windows package size: 170 kb (glue) vs 3.2 mb (dplyr)
+* install time: 3s (glue) vs 300s (dplyr)
 
 ---
 
