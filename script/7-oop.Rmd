@@ -16,88 +16,46 @@ The simplest thing that might possibly work. Built on top of regular R objects (
 df <- data.frame()
 f <- factor()
 mod <- lm(mpg ~ cyl, data = mtcars)
+
+# You are already working with S3 objects
 sloop::otype(df)
 sloop::otype(f)
 sloop::otype(mod)
 sloop::otype(1:30)
 sloop::otype(tibble::tibble())
+
+# S3 object are built on base types
 typeof(tibble::tibble())
 typeof(df)
 typeof(f)
 typeof(mod)
+
+# With additional attributes including class
 attributes(df)
 attributes(tibble::tibble())
 attributes(f)
 attributes(mod)
 ```
 
+## Why are S3 objects useful?
+
+Behaviour of a function can depend on the class:
 ```{r}
-dt <- tibble::tibble(x = 1)
-sloop::s3_dispatch(print(dt))
+x <- factor(1:10)
+class(x)
+typeof(x)
+print(x)
+
+class(x) <- "Date"
+print(x)
 ```
 
 * `print()` is called a **generic function** = interface
 * specific function is called **method** = implementation
 
-(F1 = help; F2 = definition)
+To find out if a function is a generic: `sloop::ftype()`. 
 
-```{r}
-new_foo <- function() {
-  x <- list()
-  class(x) <- "foo"
-  x
-}
-y <- new_foo()
-sloop::s3_dispatch(print(y))
-print.foo <- function(x, ...) {
-  cat("Hello!\n")
-  invisible(x)
-}
-sloop::s3_dispatch(print(y))
-print(y)
-y
-z <- 1:10
-class(z) <- "test"
-t(z)
-t
-sloop::s3_dispatch(t(z))
-# calls t.test() 
-# because t.test is named like method
-# this is why you should never use . in your function names
-t
-sloop::ftype(t)
-```
-
-```{r}
-foo <- function(x) x + 1
-class(foo) <- "sneaky"
-print.sneaky <- function(x, ...) {
-  cat("function(x) x + 2\n")
-}
-foo
-foo(1)
-```
-
-
-An S3 object is just an object with a class attribute. And you can change the class!!!
-
-```{r}
-x <- factor(1:10)
-class(x)
-class(x) <- "Date"
-```
-
-S3 is the type of system that lets you point the gun at your foot. Just don't pull the trigger.
-
-Note that prototypes are an idea implemented in vctrs; and hence the names are meaningful. S3 classes are implemented in base R and hence the names are historical.
-
-## Behaviour
-
-These objects behaviour differently because many functions in R are **generics**. Generics are functions with a (mostly) constant interface, but different implementations, called **methods**, depending on the class of the object.
-
-This makes R different to most object oriented systems (apart from Julia). Usually methods belong to a class. But in S3 methods belong to a generic function.
-
-You can often tell if a function is a generic because it will call `UseMethod()`. But some do dispatch in C, so you'll need `sloop::ftype()`. The most important generic function is print. The name of a method is just `{generic}.{class}`, and this is usually what you need to find help.
+The name of a method is just `{generic}.{class}`, and this is usually what you need to find help.
 
 The details can get a bit more complicated so you can use `sloop::s3_dispatch()` to find it:
 
@@ -116,21 +74,38 @@ s3_get_method(print.POSIXct)
 s3_get_method(print.factor)
 ```
 
-S3 also powers non-vector objects:
+## Create a new class by adding the class attribute
 
 ```{r}
-mod <- lm(mpg ~ wt, data = mtcars)
-summary(mod)
-
-s3_class(mod)
-s3_dispatch(print(mod))
-s3_dispatch(summary(mod))
+new_foo <- function() {
+  x <- list()
+  class(x) <- "foo"
+  x
+}
+y <- new_foo()
+sloop::s3_dispatch(print(y))
 ```
 
-What's a vector vs not a vector? It's hard to define it precisely, but if it's something you'd imagine putting in a data frame then it's a vector.
+Best practices at: https://adv-r.hadley.nz/s3.html#s3-classes
+
+## Create a new method by creating a function with a special name
+
+`{generic}.{class}`   
+Arguments much match generic.
+
+```{r}
+print.foo <- function(x, ...) {
+  cat("Hello!\n")
+  invisible(x)
+}
+sloop::s3_dispatch(print(y))
+print(y)
+y
+```
 
 ## Creating new generics
 
+We want a `bizarro()` function, that takes input and "bizarros" it:
 ```{r}
 bizarro("abc")
 #> [1] "cba"
@@ -142,17 +117,16 @@ bizarro(c(TRUE, FALSE))
 #> [1] FALSE TRUE
 ```
 
-Key invariants:
-* `vec_ptype(bizzaro(x))` equals `vec_ptype(x)`
-* `bizzaro(bizzaro(x))` equals `x`.
-
 ```{r}
 str_reverse <- function(x) {
   purrr::map_chr(stringr::str_split(x, ""), 
     ~ stringr::str_flatten(rev(.x))  
   )
 }
+```
 
+Without a generic, `bizzaro()` function needs a ton of `if` clauses:
+```{r}
 bizarro <- function(x) {
   if (is.character(x)) {
     str_reverse(x)
@@ -168,7 +142,7 @@ bizarro <- function(x) {
 }
 ```
 
-But 
+Much better to create a `bizzaro` generic, then implement methods:
 
 * `create_package("~/desktop/bizzaro")`
 * `use_mit_license()`
@@ -177,7 +151,7 @@ But
 ```{r}
 #' @export
 bizarro <- function(x) {
-  # This uses magic to pass argumnts to the right method
+  # This uses magic to pass arguments to the right method
   UseMethod("bizarro")
 }
 
@@ -185,9 +159,15 @@ bizarro <- function(x) {
 bizarro.character <- function(x) {
   str_reverse(x)
 }
+
+str_reverse <- function(x) {
+  purrr::map_chr(stringr::str_split(x, ""), 
+    ~ stringr::str_flatten(rev(.x))  
+  )
+}
 ```
 
-**Your turn**: 
+**Your turn**: Add:
 * a numeric method that multiplies by -1
 * a logical method which inverts TRUE/FALSE
 * a data frame method that bizarros the column names, as well as each column.
@@ -206,6 +186,21 @@ bizarro.default <- function(x) {
 }
 ```
 
+```{r}
+#' @export
+bizarro.numeric <- function(x) {
+  -x
+}
+```
+
+```{r}
+#' @export
+bizarro.data.frame <- function(x) {
+  x[] <- purrr::map(x, bizarro)
+  setNames(x, bizarro(names(x)))
+}
+```
+
 ---
 
 **Your turn**: Add a method for factors. You can use this test if you want.
@@ -219,3 +214,14 @@ test_that("bizarro factors have levels reversed", {
   expect_equal(bizarro(f2), f1)
 })
 ```
+
+---
+
+```{r}
+#' @export
+bizarro.factor <- function(x) {
+  levels(x) <- bizarro(levels(x))
+  x
+}
+```
+
