@@ -22,6 +22,15 @@ by Charlotte Wickham and Hadley Wickham
   - [Unit Tests](2-testing.pdf)
   - [Documentation and Sharing](3-sharing.pdf)
 
+## Code
+
+Find our live coded notes in [`notes/`](notes/) as we commit them.
+
+You can see the scripts we’ll work from in [`script/`](script/), but we
+recommend not reading too far ahead because you’ll find answers to some
+of the exercises, and you’ll learn more if you try to work through them
+first.
+
 ## Questions?
 
 Feel free to ask questions in the [Building Tidy Tools Workshop RStudio
