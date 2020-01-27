@@ -29,7 +29,6 @@ countdown::countdown_fullscreen(3)
 library(stringr)
 ```
 
-
 ## base R vs stringr
 
 NB: I don't think string functions in base R are bad or wrong. But they grew organically over multiple years, and I think we can do better with some systematic anaylsis. Similarly, stringr functions aren't perfect, and there are definitely mistakes. Really important to critique existing work in order to get better. (And base string function have a good collection of problems)
@@ -421,6 +420,4 @@ str_split(x, "x")
 str_split_fixed(x, "x", 2)
 ```
 
-* `str_locate()` and zero length match - end is one less that start (think about length)
-* length of output for `str_locate_all(NA, "x")` should be zero - invariant is that `NA` matches nothing - 
-  not possible to convey enough information for otherwise.
+What would be consequences of changing this behaviour to be more consistent?
