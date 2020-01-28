@@ -14,6 +14,8 @@ but the same principles apply to basically any function in the tidyverse.
 
 ## Recap 
 
+Notes at rstd.io/built-tt in `notes/4-tidyverse.Rmd` 
+
 **Your turn**: Turn this code in to package. 
 Use what you learned yesterday to get as much as possible of R CMD check to work. 
 Copy and paste from github!
