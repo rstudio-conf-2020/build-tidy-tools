@@ -170,6 +170,7 @@ bar_plot(sqrt(gear))
 **Your turn**: Make these functions work and pass R CMD check
 
 ```{r}
+# that takes the summary of `x` by cylinders
 cyl_sum <- function(x){
   mtcars %>%
   dplyr::group_by(.data$cyl) %>%
@@ -200,6 +201,5 @@ group_summary <- function(df, grp, x) {
 group_summary(mtcars, cyl, mpg)
 ```
 
-**Challenge**: Allow `group_summary()` to take two 
-grouping variables.
+**Challenge**: Allow `group_summary()` to take two grouping variables.
 
