@@ -220,5 +220,17 @@ Confusion alert: imports in DESCRIPTION is about the whole package; imports in N
 * `@import pkg` - imports all functions from a package; only use with specially designed packages. e.g.  tidyverse packages import all rlang functions `@import rlang`
 * `` `%<%` <- magrittr::`%<%` `` DON'T DO THIS NO MATTER WHAT.
 
+```{r}
+#' @importFrom tibble tibble
+#' @importFrom dplyr count
+my_count <- function(x) {
+  df <- tibble(x = x)
+  count(df, x)
+}
+```
 
+* `use_package_doc()` - gives you a nice place to stash global roxygen commands
+
+* `NAMESPACE`: about functions; completely genreated by roxygen2
+* `DESCRIPTION`: about packages; entirely under YOUR control
 
