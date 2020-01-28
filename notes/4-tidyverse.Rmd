@@ -14,11 +14,13 @@ but the same principles apply to basically any function in the tidyverse.
 
 ## Recap 
 
-Notes at rstd.io/built-tt in `notes/4-tidyverse.Rmd` 
+**Notes**: rstd.io/built-tt in `notes/4-tidyverse.Rmd` 
 
-**Your turn**: Turn this code in to package. 
-Use what you learned yesterday to get as much as possible of R CMD check to work. 
-Copy and paste from github!
+**Your turn**: Turn the code below in to a package. 
+Use what you learned yesterday to get as much as 
+possible of `check()` to work. 
+Copy and paste from github! See **Hints** and **Goal** too.
+Pink post-it for help, Green for reaching Goal.
 
 ```{r}
 library(ggplot2)
@@ -60,6 +62,8 @@ mtcars %>%
 * get check passing as cleanly as you can
 * GREEN post it when done; PINK post it for problems
 
+**Notes**: rstd.io/built-tt in `notes/4-tidyverse.Rmd` 
+
 **Your goal:**  `0 errors ✓ | 0 warnings ✓ | 1 note x`:
 ```
 > checking R code for possible problems ... NOTE
@@ -71,4 +75,72 @@ mtcars %>%
 
 0 errors ✓ | 0 warnings ✓ | 1 note x
 ```
+Extra task: web search skills to solve NOTE
+
+
+**Your turn**
+
+## Data Masking
+
+* `mtcars`, `starwars` - datasets, variables available in the environment, environnment-varaibles, "programming" variables
+
+* `cyl`, `mpg`,  `homeworld`, and `species` - columns in datasets, variables availble in data, data-variables, "statistical" variables
+
+What are they are the two types of variables I'm referring to?
+How are they different?
+
+```{r}
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(n = n(), mpg = mean(mpg))
+
+starwars %>% 
+  filter(homeworld == "Naboo", species == "Human")
+```
+
+## ++ Why does the tidyverse use data maskingn?
+
+```{r}
+starwars %>% 
+  filter(homeworld == "Naboo", species == "Human")
+
+starwars[starwars$homeworld == "Naboo" & starwars$species == "Human", ]
+```
+
+## -- Programming with the tidyverse is harder
+
+* NOTE on check for data variables
+* "indirection" is harder 
+
+## 1. check() NOTE
+
+If you refer to a data-variable inside your function,
+preface with `.data`, rlang package
+
+* Import `.data` from rlang, also in DESCRIPTION
+* Refer to a data-varibale, `var`: `.data$var`
+
+
+**Your Turn**:
+
+Fix the package to get rid of NOTE about `cyl` and `mpg`
+
+Add this to your package, and get it working
+```{r}
+#' @export
+#' @importFrom rlang .data
+diamonds_summary2 <- function(bins) {
+  ggplot2::diamonds %>% 
+    ggplot2::ggplot(ggplot2::aes(carat, price)) + 
+    ggplot2::geom_hex(bins = bins)
+}
+```
+
+
+
+
+
+
+
+
 
