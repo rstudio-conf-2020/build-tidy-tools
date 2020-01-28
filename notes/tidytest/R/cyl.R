@@ -26,7 +26,7 @@ mtcars <- data.frame(
 #' cyl_plot()
 cyl_plot <- function(){
   ggplot2::ggplot(mtcars) +
-    ggplot2::geom_bar(ggplot2::aes(cyl)) +
+    ggplot2::geom_bar(ggplot2::aes(.data$cyl)) +
     ggplot2::coord_flip()
 }
 
@@ -35,13 +35,22 @@ cyl_plot <- function(){
 #' @return tibble
 #' @export
 #' @importFrom dplyr group_by summarise n
+#' @importFrom rlang .data
 #' @examples
 #' cyl_sum()
 cyl_sum <- function(){
   mtcars %>%
-    group_by(cyl) %>%
-    summarise(n = n(), mpg = mean(mpg))
+    group_by(.data$cyl) %>%
+    summarise(n = n(), mpg = mean(.data$mpg))
 }
 
-
+#' Summary of diamonds
+#' @param bins number of bins
+#'
+#' @export
+diamonds_summary2 <- function(bins) {
+  ggplot2::diamonds %>%
+    ggplot2::ggplot(ggplot2::aes(.data$carat, .data$price)) +
+    ggplot2::geom_hex(bins = bins)
+}
 

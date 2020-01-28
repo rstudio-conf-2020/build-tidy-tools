@@ -14,5 +14,6 @@ LazyData: true
 Imports: 
     ggplot2,
     dplyr,
-    magrittr
+    magrittr,
+    rlang
 RoxygenNote: 6.1.1

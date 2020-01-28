@@ -2,7 +2,9 @@
 
 export(cyl_plot)
 export(cyl_sum)
+export(diamonds_summary2)
 importFrom(dplyr,group_by)
 importFrom(dplyr,n)
 importFrom(dplyr,summarise)
 importFrom(magrittr,"%>%")
+importFrom(rlang,.data)
