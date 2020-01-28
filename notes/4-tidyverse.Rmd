@@ -72,4 +72,3 @@ mtcars %>%
 0 errors ✓ | 0 warnings ✓ | 1 note x
 ```
 
-<!-- Commit up to here before starting -->
