@@ -1,0 +1,9 @@
+# Object-oriented programming
+
+* Base types - `typeof()`
+* S3 - simplest system of OOP. Adding attributes to an object.
+  The most important attribute `class`
+* S4 - robust, but much more complicated, and unless you're working with Bioconductor. Don't use until there's a good book about it.
+* R6 - very different to S3/S4, it's much more like OOP in python or javascript, or basically any other popular programming language of the last 20 years (apart from Julia). Powers reticulate. Useful in various places in Shiny. Avoided unless you really need it.
+
+Five chapters: <https://adv-r.hadley.nz>.
