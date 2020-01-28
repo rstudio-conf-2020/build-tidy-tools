@@ -165,9 +165,10 @@ bar_plot <- function(var){
 bar_plot(sqrt(gear))
 ```
 
-## Your Turn:
+## Your Turn: Back at 11:00am
 
-**Your turn**: Make these functions work and pass R CMD check
+**Your turn**: Make these functions _work_ and _pass R CMD check_
+Green sticky if two of these functions are working
 
 ```{r}
 # that takes the summary of `x` by cylinders
@@ -185,7 +186,7 @@ hexbin <- function(df, x, y, bins = 10) {
     ggplot2::ggplot(ggplot2::aes(x, y)) + 
     ggplot2::geom_hex(bins = bins)
 }
-hexbin(diamonds, carat, price)
+hexbin(ggplot::diamonds, carat, price)
 ```
 
 ```{r}
@@ -203,3 +204,61 @@ group_summary(mtcars, cyl, mpg)
 
 **Challenge**: Allow `group_summary()` to take two grouping variables.
 
+`{{` are magic, don't live anywhere, is syntax, not a function.
+Birthday: ? six months ago
+
+```{r}
+# that takes the summary of `x` by cylinders
+cyl_sum <- function(x){
+  mtcars %>%
+  dplyr::group_by(.data$cyl) %>%
+  dplyr::summarise(n = dplyr::n(), avg = mean({{ x }}))
+}
+cyl_sum(gear)
+```
+
+```{r}
+hexbin <- function(df, x, y, bins = 10) {
+  df %>% 
+    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }})) + 
+    ggplot2::geom_hex(bins = bins)
+}
+hexbin(ggplot::diamonds, carat, price)
+```
+
+```{r}
+group_summary <- function(df, x, ...) {
+  df %>% 
+    group_by(...) %>% 
+    summarise(
+      n = n(),
+      min = min({{ x }}, na.rm = TRUE),
+      max = max({{ x }}, na.rm = TRUE)
+    )
+}
+group_summary(mtcars, cyl, mpg)
+```
+
+`
+---
+
+### Data Masking - Summary
+
+dplyr: `arrange()`, `filter()`, `group_by()`, `mutate()`, and `summarise()`  
+ggplot2’s: `aes()`
+
+In future, arguments that use data masking 
+will be indicated in docs with `<data-masking>`.
+
+* You (as developer) know the data-variable is `x`: `arrange(df, .data$x)`
+* Name of data-variable is a **character string** in an env-variable `x`: 
+`arrange(df, .data[[x]])`
+* Data-variable is passed as a function argument `x`: `arrange(df, {{ x }})`
+
+Remember `...` can be passed through - no special treatment required.
+
+`<data-masking>`
+
+### Tidy selection
+
+The other side of tidy evaluation.
