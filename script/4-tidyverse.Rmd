@@ -344,41 +344,42 @@ Implemented with tidyselect package:
 choose variables based on their position, name, or type.
 
 Run into similar problem with indirection;
-<!-- Example that doesn't work -->
-```r
-<- function(df, x) {
+```{r}
+my_select <- function(df, x) {
   df %>% 
     select(x)
 }
-(mtcars, cyl)
+my_select(mtcars, cyl)
 ```
 <!-- Example fixed with embracing -->
-```r
-<- function(df, x) {
+```{r}
+my_select <- function(df, x) {
   df %>% 
     select({{ x }})
 }
-(mtcars, cyl)
+my_select(mtcars, cyl)
 ```
-<!-- Example of character strings -->
+
 ```r
 vars <- c("cyl", "gear")
 mtcars %>% 
   select(one_of(vars))
 ```
 
-### Tidy select summary
+### Tidy select - Summary
 
 Some functions have "select" semantics - 
 you don't give them operations that work with values, 
 but operations that work with column names:
 
-* You (as developer) know the column is `x`: `select(df, .data$x)`, or `select(df, one_of("x"))`
+* You (as developer) know the column is `x`:  `select(df, one_of("x"))`
 * Name of column is a **character string** in an env-variable `x`: 
 `select(df, one_of(x))`
 * Column is passed as a function argument `x`: `select(df, {{ x }})`
 
 Remember `...` can be passed through - no special treatment required.
+
+https://dplyr.tidyverse.org/dev/articles/programming.html
 
 Undergoing some changes for dplyr 1.0.0:
 
