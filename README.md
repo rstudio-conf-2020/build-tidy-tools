@@ -25,7 +25,7 @@ Please make sure you’ve installed the following packages:
 
 ``` r
 install.packages("devtools")
-install.packages(c("fs", "glue", "lobstr", "rematch2", "sloop", "vctrs"))
+install.packages(c("bench", "fs", "ggplot", "glue", "grid", "lobstr", "rematch2", "sloop", "vctrs"))
 devtools::install_github("r-lib/itdepends")
 ```
 
@@ -61,6 +61,33 @@ You can see the scripts we’ll work from in [`script/`](script/), but we
 recommend not reading too far ahead because you’ll find answers to some
 of the exercises, and you’ll learn more if you try to work through them
 first.
+
+## Where to learn more
+
+  - **Workflow, devtools and usethis:**
+    
+      - [R Packages, 2nd Ed.](https://r-pkgs.org/), *work in progress*
+    
+      - [R Packages, 1st Ed.](http://r-pkgs.had.co.nz/)
+    
+      - [What they forgot to teach you about R](https://rstats.wtf/)
+
+  - **Interface:** [Tidyverse design
+    guide](https://design.tidyverse.org/), *work in progress*
+
+  - **Implementation:**
+    
+      - Tidy evaluation:
+        
+          - [Programming with
+            dplyr](https://dplyr.tidyverse.org/dev/articles/programming.html)
+          - [Using ggplot2 in
+            packages](https://ggplot2.tidyverse.org/dev/articles/ggplot2-in-packages.html)
+          - Only if you want/need the theory: [Metaprogramming in
+            Advanced R](https://adv-r.hadley.nz/metaprogramming.html)
+    
+      - Object Oriented Programming / S3: [Object Oriented Programming
+        in Advanced R](https://adv-r.hadley.nz/oo.html)
 
 ## Questions?
 
