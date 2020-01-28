@@ -120,27 +120,86 @@ preface with `.data`, rlang package
 * Import `.data` from rlang, also in DESCRIPTION
 * Refer to a data-varibale, `var`: `.data$var`
 
-
 **Your Turn**:
 
 Fix the package to get rid of NOTE about `cyl` and `mpg`
+* Import `.data` from rlang, also in DESCRIPTION
+* Refer to a data-varibale, `var`: `.data$var`
 
-Add this to your package, and get it working
+Add this to your package, and get it working (GREEN)
 ```{r}
 #' @export
 #' @importFrom rlang .data
 diamonds_summary2 <- function(bins) {
   ggplot2::diamonds %>% 
-    ggplot2::ggplot(ggplot2::aes(carat, price)) + 
+    ggplot2::ggplot(ggplot2::aes(.data$carat, .data$price)) + 
     ggplot2::geom_hex(bins = bins)
 }
 ```
 
+## 2. Indirection is hard
 
+Example of trying to use "indirection": I'm  indrectoyly tryinng to referring to the `gear` column.
 
+One solution make user pass a string, use `[[`:
+```{r}
+bar_plot <- function(var){
+  ggplot2::ggplot(mtcars) +
+    ggplot2::geom_bar(ggplot2::aes(.data[[var]])) +
+    ggplot2::coord_flip() +
+    ggplot2::labs(x = var)
+}
+bar_plot("gear")
+```
 
+Better solution:  embracing, `{{ x }}` 
+Look inside the environment variable x, 
+and treat the contents like a data variable
 
+```{r}
+bar_plot <- function(var){
+  ggplot2::ggplot(mtcars) +
+    ggplot2::geom_bar(ggplot2::aes({{ var }})) +
+    ggplot2::coord_flip() 
+}
+bar_plot(sqrt(gear))
+```
 
+## Your Turn:
 
+**Your turn**: Make these functions work and pass R CMD check
 
+```{r}
+cyl_sum <- function(x){
+  mtcars %>%
+  dplyr::group_by(.data$cyl) %>%
+  dplyr::summarise(n = dplyr::n(), avg = mean(x))
+}
+cyl_sum(wt)
+```
+
+```{r}
+hexbin <- function(df, x, y, bins = 10) {
+  df %>% 
+    ggplot2::ggplot(ggplot2::aes(x, y)) + 
+    ggplot2::geom_hex(bins = bins)
+}
+hexbin(diamonds, carat, price)
+```
+
+```{r}
+group_summary <- function(df, grp, x) {
+  df %>% 
+    group_by(grp) %>% 
+    summarise(
+      n = n(),
+      min = min(x, na.rm = TRUE),
+      max = max(x, na.rm = TRUE)
+    )
+}
+group_summary(mtcars, cyl, mpg)
+```
+
+**Challenge**: Allow `group_summary()` to take two 
+grouping variables.
 
