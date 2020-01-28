@@ -161,3 +161,38 @@ my_sd
 find_env("var", environment(my_sd))
 ```
 
+# Your turn
+Code at: <https://github.com/rstudio-conf-2020/build-tidy-tools> - look in notes directory
+
+* What do these environment have in common?
+* What's different?
+* `env_print()`; `env_parent()`; `env_parents()`
+
+```{r}
+env_print(get_env(ggplot2::geom_point))
+env_print(env_parent(get_env(ggplot2::geom_point)))
+
+lobstr::obj_addr(env_parent(get_env(ggplot2::geom_point))$grid.set)
+lobstr::obj_addr(grid::grid.set)
+
+env_parents(get_env(dplyr::mutate))
+env_parents(get_env(MASS::select))
+```
+
+## How does this play out in a package?
+
+* `create_package("~/desktop/ns")`
+* `use_mit_license()`
+* `use_r("my_sd")`
+  ```{r}
+  #' My calculation of standard deviation
+  #'
+  #' @param x A numeric vector
+  #' @importFrom stats var
+  #' @export
+  my_sd <- function(x) sqrt(var(x))
+  ```
+* `devtools::document()`; `devtools::check()`
+* FIX THE NOTE
+
+
