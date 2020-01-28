@@ -1,0 +1,164 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Interface
+
+* interface = outside of function
+* implementation = inside of the function
+
+<https://design.tidyverse.org>
+
+**Your turn**: What are the properties of a funtion that define its interface? (There are at 9 properties)
+
+* Name
+* Arguments (inputs)
+  * Names and order
+  * Default values / required vs optional
+  * Types
+  * Evaluation (regular, NSE, tidy evaluation)
+* Output
+* Conditions
+  * Errors
+  * Warnings
+  * Messages
+* Side effect
+  * print to console
+  * making a plot
+  * io - writing a file
+  * change the random seed
+
+## Regular expressions / string manipulation
+
+stringr vs base R
+
+```{r}
+strsplit(x, split, ...)
+grep(pattern, x, value = FALSE, ...)
+grepl(pattern, x, ...)
+sub(pattern, replacement, x, ...)
+gsub(pattern, replacement, x, ...)
+regexpr(pattern, text, ...)
+gregexpr(pattern, text, ...)
+regexec(pattern, text, ...)
+substr(x, start, stop)
+nchar(x, type, ...)
+```
+
+Challenges:
+* Names
+  * No common theme (g = global (mostly))
+  * Short at the cost of expressiveness
+  * Rely on familiarity with linux command line tools
+  * No common prefix
+
+* Inputs
+  * Primary argument has inconsistent name: `text`, `x`
+  * Most important argument doesn't come first (1st, 2nd, or 3rd)
+
+* Output
+  * `regexpr` returns a location, but you can't feed that location in `substr()`
+  
+## Names
+
+## Function should be verbs (usually)
+
+Match these base functions with their stringr equivalent: <https://stringr.tidyverse.org/articles/from-base.html>. What's good about the names? What's bad about them?
+
+```{r}
+grepl()            # -> str_detect()
+grep()             # -> str_which()
+grep(value = TRUE) # -> str_subset()
+sub()              # -> str_replace()
+gsub()             # -> str_replace_all()
+strsplit()         # -> str_split()
+regexpr()          # -> str_locate()
+```
+
+```{r}
+str_detect() # -> str_something_lgl()
+str_which()  # -> str_something_int()
+str_subset() # -> str_something_chr()
+```
+
+```{r}
+str_locate() # location of pattern within string
+str_locate_pattern()
+str_which()  # location of strings within vector
+str_locate_vector()
+```
+
+**Your turn**: Look at ggplot2 - which functions are verbs? (`help(package = ggplot2)`) Is that good idea? If you were to make more functions into verbs, what verbs would you use?
+
+```{r}
+ggplot() %>%
+  add_geom_point() %>%
+  _scale_y_continous() %>%
+  add_coord_equal()
+
+
+```
+
+```{r}
+str_length()
+str_to_lower()
+str_to_title()
+```
+
+### Prefixes and suffixes
+
+Guided by autocomplete:
+
+* Use prefixes to group together related functions
+* Use suffixes for variations on a theme
+
+### Organising function name components
+
+* Save dots only for S3 methods
+* Otherwise be consistent! I like snake_case best; camelCase is fine.
+
+
+```{r}
+x <- structure(1:10, class = "test")
+t(x)
+# calls t.test()
+```
+
+### When to use a suffix vs. when to use an argument?
+
+```{r}
+str_replace_all()
+# why not
+str_replace(all = TRUE)
+
+x <- c("aba", "aa","b")
+str_locate(x, "a")
+str_locate_all(x, "a")
+# an argument should not generally change the
+# type of the output
+
+```
+
+```{r}
+str_to_lower()
+str_to_upper()
+str_to_title()
+str_to_sentence()
+
+str_capitalize(somthing = "lower")
+str_capitalize(somthing = "upper")
+str_capitalize(somthing = "title")
+str_capitalize(somthing = "sentence")
+```
+
+Avoid UK vs US spelling differences
+
+```{r}
+ggplot2::scale_color_grey()
+
+#' @export
+#' @rdname summarise
+summarize <- summarise
+```
+
