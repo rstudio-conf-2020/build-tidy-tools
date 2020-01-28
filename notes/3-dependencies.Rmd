@@ -1,5 +1,163 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Dependencies 
 
 !!! LIVE CODING BEGINS NOW !!!
 
 <https://github.com/rstudio-conf-2020/build-tidy-tools>
+
+## Motivation
+
+```{r}
+sd
+
+x <- 1:10
+sd(x)
+
+var <- function(x) 100
+sd(x)
+
+my_sd <- function(x) sqrt(var(x))
+my_sd(x)
+```
+
+### Warm ups
+
+```{r}
+x <- 1
+f <- function() {
+  y <- 2
+  z <- 2
+  g <- function() {
+    z <- 3
+    c(x, y, z)
+  }
+  y <- 4
+  g()
+}
+f()
+```
+
+* What is an environment?
+  * mapping from names to objects 
+  * hierarchy - every environment has parent
+  * data structure that powers scoping
+  * can use environment as dictonaries/hashmaps
+
+* How is an environment different from a list?
+  * environments can't really have classes
+  * environments have parents
+  
+```{r}
+library(rlang)
+
+e <- env()
+e$a <- 1
+e$a
+e[[1]]
+
+e$e <- e
+e$e$e$e$e$e$e$a
+lobstr::obj_addr(e)
+e$f <- 10
+lobstr::obj_addr(e)
+str(e)
+
+l <- list(a = 1)
+lobstr::obj_addr(l)
+l$l <- l
+lobstr::obj_addr(l)
+str(l)
+```
+
+
+* How can you see the contents of an environment?
+
+```{r}
+e
+str(e)
+
+ls(e)
+names(e)
+str(e$a)
+str(as.list(e))
+
+env_print(e)
+```
+
+```{r}
+countdown::countdown_fullscreen(1)
+```
+
+## Scoping
+
+```{r}
+x
+
+find_var <- function(name, env) {
+  if (env_has(env, name)) {
+    env_get(env, name)
+  } else {
+    find_var(name, env_parent(env))
+  }
+}
+
+e1 <- env()
+e1$a <- 11111
+find_var("a", e1)
+find_var("b", e1)
+```
+
+```{r}
+
+find_var <- function(name, env) {
+  if (identical(env, emptyenv())) {
+    stop("object '", name, "' not found", call. = FALSE)
+  } else if (env_has(env, name)) {
+    # env[[name]] - equivalent
+    env_get(env, name)
+  } else {
+    find_var(name, env_parent(env))
+  }
+}
+find_var("a", e1)
+find_var("b", e1)
+
+```
+
+```{r}
+find_env <- function(name, env) {
+  if (identical(env, emptyenv())) {
+    stop("object '", name, "' not found", call. = FALSE)
+  } else if (env_has(env, name)) {
+    env
+  } else {
+    find_env(name, env_parent(env))
+  }
+}
+
+find_env("a", e)
+find_env("find_env", e)
+find_env("sd", e)
+
+```
+
+```{r}
+bench::mark(
+  find_var("abort", globalenv()),
+  find_var("is", globalenv()),
+  check = FALSE
+)
+```
+
+```{r}
+sd
+find_env("var", environment(sd))
+
+my_sd
+find_env("var", environment(my_sd))
+```
+
