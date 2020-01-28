@@ -181,6 +181,7 @@ env_parents(get_env(MASS::select))
 
 ## How does this play out in a package?
 
+<https://github.com/rstudio-conf-2020/build-tidy-tools>
 * `create_package("~/desktop/ns")`
 * `use_mit_license()`
 * `use_r("my_sd")`
@@ -194,5 +195,30 @@ env_parents(get_env(MASS::select))
   ```
 * `devtools::document()`; `devtools::check()`
 * FIX THE NOTE
+
+## What about other packages?
+
+Still need to use `::` or `@importFrom`: 
+
+```{r}
+my_count <- function(x) {
+  df <- tibble::tibble(x = x)
+  dplyr::count(df, x)
+}
+```
+
+**AND** you need to include in the `Imports` field in DESCRIPTION. The easiest way to do that is `use_package()`
+
+Confusion alert: imports in DESCRIPTION is about the whole package; imports in NAMESPACE is about functions in the package.
+
+(Mention of conflicted package for dealing with related problem when using R interactively)
+
+## `::` vs `@importFrom` vs ...
+
+* `::` - default, because it's explict. 
+* `@importFrom pkg fun1 fun` - if you get annoyed with all the `::`, or you're trying to import the pipe. `@importFrom magrittr %>%`
+* `@import pkg` - imports all functions from a package; only use with specially designed packages. e.g.  tidyverse packages import all rlang functions `@import rlang`
+* `` `%<%` <- magrittr::`%<%` `` DON'T DO THIS NO MATTER WHAT.
+
 
 
