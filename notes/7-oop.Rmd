@@ -183,10 +183,34 @@ bizarro.character <- function(x){
 }
 bizarro(c("abc", "def"))
 ```
-
 ## Your Turn
 
 Write a:
 * numeric method, multiplies by -1
+```{r}
+bizarro.numeric <- function(x){
+  -x
+}
+bizarro(c(5, -2))
+```
+
+```{r}
+bizarro.logical <- function(x){
+  !x
+}
+bizarro(c(TRUE, FALSE))
+```
+
+This starts to pay off when you start writing methods for
+more complicated objects.
+
+```{r}
+bizarro.data.frame <- function(x){
+  x[] <- purrr::map(x, bizarro)
+  x
+}
+bizarro(tibble::tibble(x = 1, y = "abc", z = FALSE))
+```
+
 * a logical method, negates
 * a data.frame method, should bizarro the column names, as well as each column.
