@@ -1,4 +1,7 @@
 # Object-oriented programming
+```{r}
+library(sloop)
+```
 
 * Base types - `typeof()`
 * S3 - simplest system of OOP. Adding attributes to an object.
@@ -7,3 +10,161 @@
 * R6 - very different to S3/S4, it's much more like OOP in python or javascript, or basically any other popular programming language of the last 20 years (apart from Julia). Powers reticulate. Useful in various places in Shiny. Avoided unless you really need it.
 
 Five chapters: <https://adv-r.hadley.nz>.
+
+## S3
+
+Simplest that might work.
+
+```{r}
+df <- data.frame()
+f <- factor()
+mod <- lm(mpg ~ cyl, data = mtcars)
+
+sloop::otype(df)
+sloop::otype(f)
+sloop::otype(mod)
+
+sloop::otype(1:10)
+sloop::otype(tibble::tibble())
+sloop::otype(function(x) x)
+sloop::otype(ggplot2::ggplot())
+```
+
+
+```{r}
+typeof(df)
+typeof(f)
+typeof(factor)
+typeof(mod)
+```
+
+```{r}
+attributes(df)
+attributes(f)
+```
+
+## WHy are S3 objects useful?
+
+```{r}
+x <- factor(1:10)
+print(x)
+
+class(x) <- "Date"
+attributes(x)
+x
+```
+
+* `print()` is a generic function
+* methods is a specific implemenntation of a generic function
+
+```{r}
+sloop::ftype(print)
+```
+
+Methods follow a namign convention: `{generic}.{class}`: `t()` -> `t.test()`
+
+```{r}
+x <- factor(1:10)
+sloop::s3_dispatch(print(x))
+y <- ordered(1:10)
+print(y)
+class(y)
+sloop::s3_dispatch(print(y))
+```
+
+`sloop::s3_get_method()`
+```{r}
+sloop::s3_get_method(print.factor)
+```
+
+
+## Your turn:
+
+Find the implementation for the print functions for numerics and dates.
+
+`sloop::s3_dispatch()`, given a specific object, see how R found the method
+`sloop::s3_get_method()`, give a specific method, see the implementation
+
+```{r}
+x <- 1:10
+sloop::s3_dispatch(print(x))
+sloop::s3_get_method(print.default)
+
+y <- Sys.Date()
+z <- Sys.time()
+class(y)
+class(z)
+s3_dispatch(print(y))
+s3_get_method(print.Date)
+
+s3_dispatch(print(z))
+s3_get_method(print.POSIXct)
+```
+
+If you are returning complicated objects, like a list, 
+creating a new S3 class, let's you write a nice 
+`print()` methods to be nice onn your users.
+
+## How do you create a new class?
+
+```{r}
+new_foo <- function(){
+  x <- list()
+  class(x) <- "foo"
+  x
+}
+my_foo <- new_foo()
+my_foo
+```
+
+BEst practices: Advanced R -> S3
+
+Defining a `print()` method for class `foo`:
+```{r}
+print.foo <- function(x, ...){
+  cat("Hello\n")
+  invisible(x)
+}
+my_foo
+```
+
+## Defining a new generic
+
+```{r}
+bizarro("abc")
+#> [1] "cba"
+
+bizarro(1)
+#> [1] -1
+
+bizarro(c(TRUE, FALSE))
+#> [1] FALSE TRUE
+```
+
+```{r}
+str_reverse <- function(x) {
+  purrr::map_chr(stringr::str_split(x, ""), 
+    ~ stringr::str_flatten(rev(.x))  
+  )
+}
+```
+
+Without a generic, `bizzaro()` function needs a ton of `if` clauses:
+```{r}
+bizarro <- function(x) {
+  if (is.character(x)) {
+    str_reverse(x)
+  } else if (is.numeric(x)) {
+    -x
+  } else if (is.logical(x)) {
+    !x
+  } else {
+    stop(
+      "Don't know how to make bizzaro <", class(x)[[1]], ">", 
+      call. = FALSE)
+  }
+}
+```
+
+
+
